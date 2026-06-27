@@ -16,11 +16,12 @@ En este proyecto utilizamos la estructura para simular un **Caché en Memoria pa
 
 ### 1. Inicializar el entorno
 Abre tu terminal en la carpeta del proyecto y ejecuta:
-```bash
+*```bash
 # Inicializar el módulo de Go
 go mod init tu_modulo
 
 # Instalar el driver de SQLite
 go get [github.com/mattn/go-sqlite3](https://github.com/mattn/go-sqlite3)
+
 2. Ejecutar la Simulación (Entregable 3)
 El script principal verificará si la base de datos retail.db existe. Si no, leerá los datos del archivo CSV, los cargará, y finalmente ejecutará una simulación mostrando la drástica diferencia de tiempos entre buscar en la Base de Datos vs. buscar en nuestro Splay Tree.
