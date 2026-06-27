@@ -25,5 +25,4 @@ go mod init tu_modulo
 # Instalar el driver de SQLite
 go get [github.com/mattn/go-sqlite3](https://github.com/mattn/go-sqlite3)
 *
-2. Ejecutar la Simulación (Entregable 3)
-El script principal verificará si la base de datos retail.db existe. Si no, leerá los datos del archivo CSV, los cargará, y finalmente ejecutará una simulación mostrando la drástica diferencia de tiempos entre buscar en la Base de Datos vs. buscar en nuestro Splay Tree.
+Análisis de Complejidad (Big-O)El beneficio principal del Splay Tree no está en su peor caso individual, sino en su complejidad amortizada, ideal para sistemas donde unas pocas claves agrupan la mayoría de las consultas.Espacio en Memoria: $\mathcal{O}(n)$ — Se reserva un nodo estructural por cada clave almacenada en la RAM.Búsqueda / Inserción / Eliminación (Peor caso individual): $\mathcal{O}(n)$ — En el improbable caso de que el árbol se degenere en una lista enlazada pura.Complejidad Amortizada (Promedio): $\mathcal{O}(\log n)$ — Gracias al mecanismo de "splaying" (biselado), al realizar una secuencia de $m$ operaciones, el tiempo por operación se balancea logarítmicamente.Localidad de Referencia: Si consultamos un mismo elemento (ej. el producto estrella de la tienda) múltiples veces seguidas, el tiempo de búsqueda tiende a $\mathcal{O}(1)$ porque el nodo reposa en la raíz.
