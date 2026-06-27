@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Splay Tree Simulator - Visualización Interactiva</title>
+    <!-- Tailwind CSS para diseño moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0f172a',
+                        cardBg: 'rgba(30, 41, 59, 0.7)',
+                        accentPrimary: '#6366f1',
+                        accentSecondary: '#8b5cf6',
+                        accentSuccess: '#10b981',
+                        accentDanger: '#ef4444'
+                    },
+                    backdropBlur: {
+                        xs: '2px'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts Outfit & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Estilos personalizados -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Vue.js 3 CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body class="bg-darkBg text-slate-100 min-h-screen flex flex-col font-sans overflow-x-hidden">
+
+    <div id="app" class="flex flex-col flex-1 h-screen overflow-hidden">
+        <!-- Encabezado con estética Glassmorphism -->
+        <header class="bg-slate-900/60 backdrop-blur-md border-b border-slate-800/80 px-6 py-4 flex items-center justify-between shrink-0 z-10">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-accentPrimary to-accentSecondary flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                    <i class="fa-solid fa-diagram-project text-white text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold font-outfit tracking-wide bg-gradient-to-r from-indigo-200 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
+                        Splay Tree Simulator
+                    </h1>
+                    <p class="text-xs text-slate-400 font-medium">Autobalanceo por Acceso y Localidad de Datos</p>
+                </div>
+            </div>
+            <!-- Estadísticas en tiempo real -->
+            <div class="flex gap-6 text-sm">
+                <div class="bg-slate-800/40 border border-slate-700/30 rounded-lg px-4 py-2 flex items-center gap-3">
+                    <span class="text-slate-400"><i class="fa-solid fa-cubes text-indigo-400 mr-1.5"></i>Nodos:</span>
+                    <span class="font-bold text-indigo-300">{{ treeStats.size }}</span>
+                </div>
+                <div class="bg-slate-800/40 border border-slate-700/30 rounded-lg px-4 py-2 flex items-center gap-3">
+                    <span class="text-slate-400"><i class="fa-solid fa-arrows-up-down text-purple-400 mr-1.5"></i>Altura:</span>
+                    <span class="font-bold text-purple-300">{{ treeStats.height }}</span>
+                </div>
+                <div class="bg-slate-800/40 border border-slate-700/30 rounded-lg px-4 py-2 flex items-center gap-3" v-if="treeStats.size > 0">
+                    <span class="text-slate-400"><i class="fa-solid fa-crown text-amber-400 mr-1.5"></i>Raíz:</span>
+                    <span class="font-mono font-bold text-amber-300">{{ currentRootKey || 'N/A' }}</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Contenedor Principal (Panel Lateral + Lienzo) -->
+        <main class="flex flex-1 overflow-hidden">
+            <!-- Barra Lateral de Operaciones y Simulación -->
+            <aside class="w-80 bg-slate-900/40 backdrop-blur-md border-r border-slate-800/80 p-5 flex flex-col gap-6 overflow-y-auto shrink-0">
+                <!-- Panel de Operaciones -->
+                <div class="flex flex-col gap-4">
+                    <h2 class="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-play text-indigo-400"></i> Operaciones del Árbol
+                    </h2>
+                    
+                    <!-- Insertar -->
+                    <div class="bg-slate-800/30 border border-slate-800 rounded-xl p-3 flex flex-col gap-2 hover:border-indigo-500/30 transition-all duration-300">
+                        <div class="text-xs font-semibold text-indigo-400"><i class="fa-solid fa-plus-circle mr-1"></i>Insertar Nodo</div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="text" v-model="insertKey" placeholder="Código (ej. 10)" 
+                                   class="bg-slate-950/80 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-mono"
+                                   @keyup.enter="runInsert">
+                            <input type="text" v-model="insertValue" placeholder="Descripción" 
+                                   class="bg-slate-950/80 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                                   @keyup.enter="runInsert">
+                        </div>
+                        <button @click="runInsert" :disabled="loading"
+                                class="w-full bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 disabled:bg-indigo-800/40 text-white rounded-lg py-1.5 text-xs font-semibold tracking-wide transition-all shadow-md shadow-indigo-600/10 flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-plus text-[10px]" v-if="!loading"></i>
+                            <i class="fa-solid fa-spinner animate-spin text-[10px]" v-else></i>
+                            Insertar
+                        </button>
+                    </div>
+
+                    <!-- Buscar -->
+                    <div class="bg-slate-800/30 border border-slate-800 rounded-xl p-3 flex flex-col gap-2 hover:border-purple-500/30 transition-all duration-300">
+                        <div class="text-xs font-semibold text-purple-400"><i class="fa-solid fa-search mr-1"></i>Buscar Nodo (Locality Test)</div>
+                        <div class="flex gap-2">
+                            <input type="text" v-model="searchKey" placeholder="Código a buscar..." 
+                                   class="flex-1 bg-slate-950/80 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-purple-500 font-mono"
+                                   @keyup.enter="runSearch">
+                            <button @click="runSearch" :disabled="loading"
+                                    class="bg-purple-600 hover:bg-purple-500 active:bg-purple-700 disabled:bg-purple-800/40 text-white rounded-lg px-4 py-1.5 text-xs font-semibold tracking-wide transition-all shadow-md shadow-purple-600/10 flex items-center gap-1">
+                                <i class="fa-solid fa-magnifying-glass" v-if="!loading"></i>
+                                <i class="fa-solid fa-spinner animate-spin" v-else></i>
+                                Buscar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Eliminar -->
+                    <div class="bg-slate-800/30 border border-slate-800 rounded-xl p-3 flex flex-col gap-2 hover:border-red-500/30 transition-all duration-300">
+                        <div class="text-xs font-semibold text-red-400"><i class="fa-solid fa-trash-can mr-1"></i>Eliminar Nodo</div>
+                        <div class="flex gap-2">
+                            <input type="text" v-model="deleteKey" placeholder="Código a eliminar..." 
+                                   class="flex-1 bg-slate-950/80 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-red-500 font-mono"
+                                   @keyup.enter="runDelete">
+                            <button @click="runDelete" :disabled="loading"
+                                    class="bg-red-600/90 hover:bg-red-500 active:bg-red-700 disabled:bg-red-800/40 text-white rounded-lg px-4 py-1.5 text-xs font-semibold tracking-wide transition-all shadow-md shadow-red-600/10 flex items-center gap-1">
+                                <i class="fa-solid fa-trash" v-if="!loading"></i>
+                                <i class="fa-solid fa-spinner animate-spin" v-else></i>
+                                Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Carga Masiva y Limpieza -->
+                <div class="flex flex-col gap-2">
+                    <button @click="runLoadSample" :disabled="loading"
+                            class="w-full bg-slate-800 hover:bg-slate-700 active:bg-slate-900 border border-slate-700/50 rounded-xl py-2.5 text-xs font-medium tracking-wide transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-file-csv text-emerald-400 text-sm"></i>
+                        Cargar Productos de Muestra (CSV)
+                    </button>
+                    <button @click="runClear" :disabled="loading"
+                            class="w-full bg-slate-950/50 hover:bg-red-950/40 border border-slate-800 hover:border-red-800/50 rounded-xl py-2 text-xs font-medium text-slate-400 hover:text-red-400 tracking-wide transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        Reiniciar Árbol Completo
+                    </button>
+                </div>
+
+                <hr class="border-slate-800/60 my-1">
+
+                <!-- Panel de Simulación / Paso a Paso -->
+                <div class="flex-1 flex flex-col gap-3 min-h-0">
+                    <div class="flex items-center justify-between shrink-0">
+                        <h2 class="text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-film text-purple-400"></i> Simulación
+                        </h2>
+                        <span class="text-xs bg-indigo-500/15 text-indigo-400 px-2 py-0.5 rounded-full font-semibold border border-indigo-500/20" v-if="simulationSteps.length > 0">
+                            {{ currentStepIndex + 1 }} / {{ simulationSteps.length }}
+                        </span>
+                    </div>
+
+                    <!-- Si no hay simulación activa -->
+                    <div v-if="simulationSteps.length === 0" class="flex-1 flex flex-col items-center justify-center text-center p-4 border border-dashed border-slate-800 rounded-2xl bg-slate-900/20">
+                        <i class="fa-solid fa-circle-info text-slate-600 text-2xl mb-2"></i>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Realiza una operación (Insertar, Buscar o Eliminar) para ver la simulación del balanceo paso a paso.
+                        </p>
+                    </div>
+
+                    <!-- Si hay simulación activa -->
+                    <div v-else class="flex-1 flex flex-col gap-4 min-h-0">
+                        <!-- Mensaje Informativo del Paso -->
+                        <div class="bg-indigo-950/20 border border-indigo-900/30 rounded-xl p-3 flex flex-col gap-1 shrink-0 select-none">
+                            <span class="text-[10px] uppercase font-bold text-indigo-400 tracking-wider">Acción Actual</span>
+                            <p class="text-xs text-slate-200 leading-normal font-medium">{{ currentStep.description }}</p>
+                        </div>
+
+                        <!-- Reproductor paso a paso -->
+                        <div class="bg-slate-950/40 border border-slate-900 rounded-xl p-3 flex flex-col gap-3 shrink-0">
+                            <!-- Slider -->
+                            <div class="flex items-center gap-2">
+                                <input type="range" min="0" :max="simulationSteps.length - 1" v-model.number="currentStepIndex"
+                                       class="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+                            </div>
+
+                            <!-- Botones del Reproductor -->
+                            <div class="flex items-center justify-between gap-1.5">
+                                <button @click="goToStep(0)" title="Ir al inicio"
+                                        class="flex-1 bg-slate-900 hover:bg-slate-800 active:bg-slate-950 rounded-lg py-1.5 text-xs text-slate-400 hover:text-slate-200 transition-all border border-slate-800/80">
+                                    <i class="fa-solid fa-backward-step"></i>
+                                </button>
+                                <button @click="prevStep" :disabled="currentStepIndex === 0" title="Anterior"
+                                        class="flex-1 bg-slate-900 hover:bg-slate-800 active:bg-slate-950 disabled:opacity-40 rounded-lg py-1.5 text-xs text-slate-400 hover:text-slate-200 transition-all border border-slate-800/80">
+                                    <i class="fa-solid fa-caret-left text-sm"></i>
+                                </button>
+                                <button @click="togglePlay"
+                                        class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg py-1.5 text-xs font-semibold transition-all shadow-md shadow-indigo-600/10">
+                                    <i class="fa-solid" :class="playing ? 'fa-pause' : 'fa-play'"></i>
+                                </button>
+                                <button @click="nextStep" :disabled="currentStepIndex === simulationSteps.length - 1" title="Siguiente"
+                                        class="flex-1 bg-slate-900 hover:bg-slate-800 active:bg-slate-950 disabled:opacity-40 rounded-lg py-1.5 text-xs text-slate-400 hover:text-slate-200 transition-all border border-slate-800/80">
+                                    <i class="fa-solid fa-caret-right text-sm"></i>
+                                </button>
+                                <button @click="goToStep(simulationSteps.length - 1)" title="Ir al final"
+                                        class="flex-1 bg-slate-900 hover:bg-slate-800 active:bg-slate-950 rounded-lg py-1.5 text-xs text-slate-400 hover:text-slate-200 transition-all border border-slate-800/80">
+                                    <i class="fa-solid fa-forward-step"></i>
+                                </button>
+                            </div>
+
+                            <!-- Velocidad de reproducción -->
+                            <div class="flex items-center justify-between text-[10px] text-slate-500 font-medium px-0.5">
+                                <span>Velocidad:</span>
+                                <select v-model.number="playbackSpeed" class="bg-transparent text-indigo-400 font-semibold focus:outline-none cursor-pointer">
+                                    <option :value="1500" class="bg-slate-900 text-slate-300">Lenta (1.5s)</option>
+                                    <option :value="800" class="bg-slate-900 text-slate-300">Normal (0.8s)</option>
+                                    <option :value="400" class="bg-slate-900 text-slate-300">Rápida (0.4s)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Detalle del Nodo splayado en la simulación -->
+                        <div class="bg-slate-800/20 border border-slate-800/50 rounded-xl p-3 flex flex-col gap-1.5 select-none" v-if="currentNodeDetail">
+                            <span class="text-[10px] uppercase font-bold text-purple-400 tracking-wider">Detalles de Búsqueda</span>
+                            <div class="text-xs flex flex-col gap-1">
+                                <div><span class="text-slate-400 font-medium">Clave:</span> <span class="font-mono font-semibold text-slate-100 bg-slate-900/60 px-1.5 py-0.5 rounded">{{ currentNodeDetail.key }}</span></div>
+                                <div class="truncate"><span class="text-slate-400 font-medium">Valor:</span> <span class="text-slate-200 font-medium" :title="currentNodeDetail.value">{{ currentNodeDetail.value }}</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Lienzo de visualización del Árbol (SVG interactivo) -->
+            <section class="flex-1 bg-slate-950 relative flex items-center justify-center p-4">
+                <!-- Grid background de fondo con CSS premium -->
+                <div class="absolute inset-0 bg-grid-slate-900 opacity-20 pointer-events-none"></div>
+                <!-- Degradado de brillo de fondo -->
+                <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <!-- Mensaje cuando el árbol está vacío -->
+                <div v-if="!treeState.tree" class="flex flex-col items-center gap-4 text-center z-10 max-w-sm px-6 py-8 border border-slate-800/80 rounded-3xl bg-slate-900/30 backdrop-blur-md">
+                    <div class="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 text-3xl">
+                        <i class="fa-solid fa-circle-nodes"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold font-outfit text-slate-200">El Árbol está Vacío</h3>
+                        <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+                            Comienza insertando un elemento manualmente usando el panel lateral o carga la muestra del CSV para ver cómo se estructura el Splay Tree.
+                        </p>
+                    </div>
+                    <button @click="runLoadSample" :disabled="loading"
+                            class="bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl px-5 py-2 text-xs font-semibold tracking-wide transition-all shadow-md shadow-indigo-600/10 flex items-center gap-2">
+                        <i class="fa-solid fa-cloud-arrow-down"></i> Cargar productos
+                    </button>
+                </div>
+
+                <!-- Lienzo del árbol en SVG -->
+                <div v-else class="w-full h-full flex items-center justify-center relative select-none">
+                    <svg ref="treeSvg" :view-box.camel="viewBox" class="w-full h-full cursor-grab active:cursor-grabbing select-none"
+                         @mousedown="startPan" @mousemove="pan" @mouseup="endPan" @mouseleave="endPan" @wheel="handleZoom">
+                        <!-- Definiciones para filtros de sombra y marcadores de flechas -->
+                        <defs>
+                            <!-- Filtro de resplandor para el nodo activo -->
+                            <filter id="glow-indigo" x="-20%" y="-20%" width="140%" height="140%">
+                                <feGaussianBlur stdDeviation="6" result="blur" />
+                                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                            </filter>
+                            <filter id="glow-amber" x="-20%" y="-20%" width="140%" height="140%">
+                                <feGaussianBlur stdDeviation="8" result="blur" />
+                                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                            </filter>
+                        </defs>
+
+                        <!-- Contenedor del zoom/paneo -->
+                        <g :transform="`translate(${panX}, ${panY}) scale(${zoomScale})`">
+                            <!-- Enlaces (líneas entre nodos) -->
+                            <g class="edges">
+                                <path v-for="(edge, idx) in calculatedEdges" :key="`edge-${idx}`"
+                                      :d="drawEdge(edge.x1, edge.y1, edge.x2, edge.y2)"
+                                      class="edge-line" />
+                            </g>
+
+                            <!-- Nodos -->
+                            <g v-for="node in calculatedNodes" :key="`node-${node.key}`" 
+                               class="node-group cursor-pointer"
+                               :class="{ 'is-active': isNodeActive(node.key), 'is-root': isNodeRoot(node.key) }"
+                               @click="selectNode(node)">
+                                <!-- Glow / Brillo para nodos especiales -->
+                                <circle v-if="isNodeActive(node.key)" :cx="node.x" :cy="node.y" r="32" 
+                                        class="fill-indigo-500/10 stroke-indigo-500/50 stroke-2 animate-pulse" filter="url(#glow-indigo)" />
+                                <circle v-else-if="isNodeRoot(node.key)" :cx="node.x" :cy="node.y" r="28" 
+                                        class="fill-amber-500/5 stroke-amber-500/40 stroke-2" filter="url(#glow-amber)" />
+
+                                <!-- Círculo Principal -->
+                                <circle :cx="node.x" :cy="node.y" :r="nodeRadius" 
+                                        class="node-circle" />
+
+                                <!-- Texto con la clave del nodo -->
+                                <text :x="node.x" :y="node.y + 4" class="node-text font-mono">{{ node.key }}</text>
+                            </g>
+                        </g>
+                    </svg>
+
+                    <!-- Control de zoom flotante -->
+                    <div class="absolute bottom-4 right-4 flex gap-1.5 bg-slate-900/80 backdrop-blur border border-slate-800 rounded-xl p-1 shadow-lg">
+                        <button @click="zoomIn" class="w-8 h-8 flex items-center justify-center hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-200 transition-all" title="Zoom in">
+                            <i class="fa-solid fa-plus text-sm"></i>
+                        </button>
+                        <button @click="resetZoomPan" class="w-8 h-8 flex items-center justify-center hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-200 transition-all" title="Restaurar vista">
+                            <i class="fa-solid fa-compress text-sm"></i>
+                        </button>
+                        <button @click="zoomOut" class="w-8 h-8 flex items-center justify-center hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-200 transition-all" title="Zoom out">
+                            <i class="fa-solid fa-minus text-sm"></i>
+                        </button>
+                    </div>
+
+                    <!-- Ficha informativa de nodo seleccionado en el lienzo -->
+                    <div v-if="selectedNode" class="absolute top-4 right-4 max-w-xs bg-slate-900/90 backdrop-blur border border-indigo-500/30 rounded-2xl p-4 shadow-xl select-none z-10">
+                        <div class="flex justify-between items-start gap-4 mb-2">
+                            <div class="text-[10px] uppercase font-bold text-indigo-400 tracking-wider">Nodo Seleccionado</div>
+                            <button @click="selectedNode = null" class="text-slate-500 hover:text-slate-300"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <div class="flex flex-col gap-1.5 text-xs">
+                            <div><span class="text-slate-400 font-medium">Clave:</span> <span class="font-mono font-bold text-slate-200 bg-slate-950/60 px-1.5 py-0.5 rounded">{{ selectedNode.key }}</span></div>
+                            <div>
+                                <span class="text-slate-400 font-medium">Descripción / Valor:</span>
+                                <p class="text-slate-200 font-medium mt-1 bg-slate-950/30 border border-slate-800 rounded-lg p-2 leading-relaxed whitespace-normal break-words max-h-24 overflow-y-auto">
+                                    {{ selectedNode.value }}
+                                </p>
+                            </div>
+                            <button @click="searchSelected" 
+                                    class="mt-1 bg-indigo-600/20 hover:bg-indigo-600/35 border border-indigo-500/40 text-indigo-300 rounded-lg py-1.5 font-semibold text-center hover:text-white transition-all">
+                                <i class="fa-solid fa-location-crosshairs mr-1"></i> Splayear (Acceder)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Script de lógica del frontend -->
+    <script>
+        const { createApp, ref, computed, onMounted, watch } = Vue;
+
+        createApp({
+            setup() {
+                // Estado del árbol
+                const treeState = ref({ size: 0, height: 0, tree: null });
+                const treeStats = computed(() => ({
+                    size: treeState.value.size,
+                    height: treeState.value.height
+                }));
+                const currentRootKey = computed(() => {
+                    return treeState.value.tree ? treeState.value.tree.key : null;
+                });
+
+                // Inputs
+                const insertKey = ref('');
+                const insertValue = ref('');
+                const searchKey = ref('');
+                const deleteKey = ref('');
+
+                // Estado de carga
+                const loading = ref(false);
+
+                // Simulación paso a paso
+                const simulationSteps = ref([]);
+                const currentStepIndex = ref(0);
+                const playing = ref(false);
+                const playbackSpeed = ref(800); // ms
+                let playbackInterval = null;
+
+                // Selección del nodo en el lienzo
+                const selectedNode = ref(null);
+
+                // Nodo splayado en la simulación activa
+                const currentNodeDetail = ref(null);
+
+                const currentStep = computed(() => {
+                    if (simulationSteps.value.length === 0) return null;
+                    return simulationSteps.value[currentStepIndex.value];
+                });
+
+                // Si cambia el paso de la simulación, actualizamos la vista del árbol a ese snapshot
+                watch(currentStepIndex, (newIdx) => {
+                    if (simulationSteps.value.length > 0 && simulationSteps.value[newIdx]) {
+                        treeState.value.tree = simulationSteps.value[newIdx].tree;
+                    }
+                });
+
+                // Configuración de visualización SVG (Paneo y Zoom)
+                const zoomScale = ref(1.0);
+                const panX = ref(0);
+                const panY = ref(0);
+                const isPanning = ref(false);
+                const startX = ref(0);
+                const startY = ref(0);
+                const nodeRadius = ref(20);
+
+                const viewBox = computed(() => {
+                    return `0 0 800 600`;
+                });
+
+                // Cargar estado inicial del árbol
+                const fetchTree = async () => {
+                    try {
+                        const res = await fetch('/api/tree');
+                        const data = await res.json();
+                        treeState.value = data;
+                    } catch (err) {
+                        console.error("Error al obtener árbol:", err);
+                    }
+                };
+
+                // Acciones
+                const runInsert = async () => {
+                    if (!insertKey.value.trim()) return;
+                    loading.value = ref(true);
+                    stopPlayback();
+                    try {
+                        const res = await fetch('/api/insert', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ key: insertKey.value, value: insertValue.value })
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            simulationSteps.value = data.steps;
+                            currentStepIndex.value = 0;
+                            treeState.value = data.final;
+                            insertKey.value = '';
+                            insertValue.value = '';
+                            currentNodeDetail.value = null;
+                            // Auto reproducir la animación
+                            startPlayback();
+                        }
+                    } catch (err) {
+                        console.error(err);
+                    } finally {
+                        loading.value = false;
+                    }
+                };
+
+                const runSearch = async () => {
+                    if (!searchKey.value.trim()) return;
+                    loading.value = true;
+                    stopPlayback();
+                    try {
+                        const res = await fetch('/api/search', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ key: searchKey.value })
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            simulationSteps.value = data.steps;
+                            currentStepIndex.value = 0;
+                            treeState.value = data.final;
+                            searchKey.value = '';
+                            if (data.found) {
+                                currentNodeDetail.value = { key: data.steps[0].activeKey, value: data.value };
+                            } else {
+                                currentNodeDetail.value = { key: data.steps[0].activeKey, value: "No encontrado en el árbol" };
+                            }
+                            startPlayback();
+                        }
+                    } catch (err) {
+                        console.error(err);
+                    } finally {
+                        loading.value = false;
+                    }
+                };
+
+                const runDelete = async () => {
+                    if (!deleteKey.value.trim()) return;
+                    loading.value = true;
+                    stopPlayback();
+                    try {
+                        const res = await fetch('/api/delete', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ key: deleteKey.value })
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            simulationSteps.value = data.steps;
+                            currentStepIndex.value = 0;
+                            treeState.value = data.final;
+                            deleteKey.value = '';
+                            currentNodeDetail.value = null;
+                            startPlayback();
+                        }
+                    } catch (err) {
+                        console.error(err);
+                    } finally {
+                        loading.value = false;
+                    }
+                };
+
+                const runClear = async () => {
+                    if (!confirm("¿Seguro que deseas vaciar por completo el Splay Tree?")) return;
+                    loading.value = true;
+                    stopPlayback();
+                    simulationSteps.value = [];
+                    currentStepIndex.value = 0;
+                    selectedNode.value = null;
+                    currentNodeDetail.value = null;
+                    try {
+                        const res = await fetch('/api/clear', { method: 'POST' });
+                        const data = await res.json();
+                        treeState.value = data.final;
+                    } catch (err) {
+                        console.error(err);
+                    } finally {
+                        loading.value = false;
+                    }
+                };
+
+                const runLoadSample = async () => {
+                    loading.value = true;
+                    stopPlayback();
+                    simulationSteps.value = [];
+                    currentStepIndex.value = 0;
+                    selectedNode.value = null;
+                    currentNodeDetail.value = null;
+                    try {
+                        const res = await fetch('/api/load-sample', { method: 'POST' });
+                        const data = await res.json();
+                        treeState.value = data.final;
+                        alert(`¡Se cargaron ${data.loaded} productos del CSV en el Splay Tree!`);
+                    } catch (err) {
+                        console.error(err);
+                    } finally {
+                        loading.value = false;
+                    }
+                };
+
+                // Reproductor paso a paso
+                const nextStep = () => {
+                    if (currentStepIndex.value < simulationSteps.value.length - 1) {
+                        currentStepIndex.value++;
+                    } else {
+                        stopPlayback();
+                    }
+                };
+
+                const prevStep = () => {
+                    if (currentStepIndex.value > 0) {
+                        currentStepIndex.value--;
+                    }
+                };
+
+                const goToStep = (idx) => {
+                    if (idx >= 0 && idx < simulationSteps.value.length) {
+                        currentStepIndex.value = idx;
+                    }
+                };
+
+                const startPlayback = () => {
+                    playing.value = true;
+                    if (playbackInterval) clearInterval(playbackInterval);
+                    playbackInterval = setInterval(() => {
+                        nextStep();
+                    }, playbackSpeed.value);
+                };
+
+                const stopPlayback = () => {
+                    playing.value = false;
+                    if (playbackInterval) {
+                        clearInterval(playbackInterval);
+                        playbackInterval = null;
+                    }
+                };
+
+                const togglePlay = () => {
+                    if (playing.value) {
+                        stopPlayback();
+                    } else {
+                        // Si ya está al final, reiniciar para reproducir de nuevo
+                        if (currentStepIndex.value === simulationSteps.value.length - 1) {
+                            currentStepIndex.value = 0;
+                        }
+                        startPlayback();
+                    }
+                };
+
+                // Cambiar velocidad de reproducción al cambiar opción
+                watch(playbackSpeed, () => {
+                    if (playing.value) {
+                        startPlayback();
+                    }
+                });
+
+                // Seleccionar nodo para detalles
+                const selectNode = (node) => {
+                    selectedNode.value = {
+                        key: node.key,
+                        value: node.value
+                    };
+                };
+
+                const searchSelected = () => {
+                    if (selectedNode.value) {
+                        searchKey.value = selectedNode.value.key;
+                        runSearch();
+                        selectedNode.value = null;
+                    }
+                };
+
+                // Métodos para verificar si el nodo es activo o raíz
+                const isNodeActive = (key) => {
+                    return currentStep.value && currentStep.value.activeKey === key;
+                };
+
+                const isNodeRoot = (key) => {
+                    return currentRootKey.value === key;
+                };
+
+                // Algoritmo de diseño de árbol jerárquico visual
+                const calculatedNodes = computed(() => {
+                    const nodes = [];
+                    if (!treeState.value.tree) return nodes;
+
+                    const traverse = (node, depth, minX, maxX) => {
+                        if (!node) return;
+
+                        const x = (minX + maxX) / 2;
+                        const y = (depth * 90) + 70;
+
+                        nodes.push({
+                            key: node.key,
+                            value: node.value,
+                            x: x,
+                            y: y,
+                            depth: depth
+                        });
+
+                        // Espacio horizontal para descendientes
+                        traverse(node.left, depth + 1, minX, x);
+                        traverse(node.right, depth + 1, x, maxX);
+                    };
+
+                    traverse(treeState.value.tree, 0, 50, 750);
+                    return nodes;
+                });
+
+                const calculatedEdges = computed(() => {
+                    const edges = [];
+                    if (!treeState.value.tree) return edges;
+
+                    const traverse = (node, depth, minX, maxX) => {
+                        if (!node) return;
+
+                        const x = (minX + maxX) / 2;
+                        const y = (depth * 90) + 70;
+
+                        if (node.left) {
+                            const lx = (minX + x) / 2;
+                            const ly = ((depth + 1) * 90) + 70;
+                            edges.push({ x1: x, y1: y, x2: lx, y2: ly });
+                            traverse(node.left, depth + 1, minX, x);
+                        }
+
+                        if (node.right) {
+                            const rx = (x + maxX) / 2;
+                            const ry = ((depth + 1) * 90) + 70;
+                            edges.push({ x1: x, y1: y, x2: rx, y2: ry });
+                            traverse(node.right, depth + 1, x, maxX);
+                        }
+                    };
+
+                    traverse(treeState.value.tree, 0, 50, 750);
+                    return edges;
+                });
+
+                // Función de dibujo de enlaces curvados suaves
+                const drawEdge = (x1, y1, x2, y2) => {
+                    // Dibujar una curva Bézier cúbica suave entre nodos
+                    const midY = (y1 + y2) / 2;
+                    return `M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${y2}`;
+                };
+
+                // Control Paneo y Zoom (Interacciones de ratón)
+                const startPan = (e) => {
+                    // Solo panea si se hace click sobre el fondo del SVG, no sobre un grupo de nodo
+                    if (e.target.tagName === 'svg' || e.target.tagName === 'path' || e.target.tagName === 'g') {
+                        isPanning.value = true;
+                        startX.value = e.clientX - panX.value;
+                        startY.value = e.clientY - panY.value;
+                    }
+                };
+
+                const pan = (e) => {
+                    if (!isPanning.value) return;
+                    panX.value = e.clientX - startX.value;
+                    panY.value = e.clientY - startY.value;
+                };
+
+                const endPan = () => {
+                    isPanning.value = false;
+                };
+
+                const handleZoom = (e) => {
+                    e.preventDefault();
+                    const zoomIntensity = 0.08;
+                    const delta = e.deltaY < 0 ? 1 : -1;
+                    let nextScale = zoomScale.value + delta * zoomIntensity;
+                    // Limitar zoom
+                    if (nextScale < 0.2) nextScale = 0.2;
+                    if (nextScale > 3.0) nextScale = 3.0;
+                    zoomScale.value = nextScale;
+                };
+
+                const zoomIn = () => {
+                    if (zoomScale.value < 3.0) zoomScale.value += 0.15;
+                };
+
+                const zoomOut = () => {
+                    if (zoomScale.value > 0.2) zoomScale.value -= 0.15;
+                };
+
+                const resetZoomPan = () => {
+                    zoomScale.value = 1.0;
+                    panX.value = 0;
+                    panY.value = 0;
+                };
+
+                onMounted(() => {
+                    fetchTree();
+                });
+
+                return {
+                    treeState,
+                    treeStats,
+                    currentRootKey,
+                    insertKey,
+                    insertValue,
+                    searchKey,
+                    deleteKey,
+                    loading,
+                    simulationSteps,
+                    currentStepIndex,
+                    currentStep,
+                    currentNodeDetail,
+                    playing,
+                    playbackSpeed,
+                    selectedNode,
+                    zoomScale,
+                    panX,
+                    panY,
+                    nodeRadius,
+                    viewBox,
+                    calculatedNodes,
+                    calculatedEdges,
+                    runInsert,
+                    runSearch,
+                    runDelete,
+                    runClear,
+                    runLoadSample,
+                    nextStep,
+                    prevStep,
+                    goToStep,
+                    togglePlay,
+                    selectNode,
+                    searchSelected,
+                    isNodeActive,
+                    isNodeRoot,
+                    drawEdge,
+                    startPan,
+                    pan,
+                    endPan,
+                    handleZoom,
+                    zoomIn,
+                    zoomOut,
+                    resetZoomPan
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
