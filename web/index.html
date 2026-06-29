@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Splay Tree Simulator - Visualización Interactiva</title>
-    <!-- Tailwind CSS para diseño moderno -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -25,19 +24,14 @@
             }
         }
     </script>
-    <!-- Google Fonts Outfit & Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- FontAwesome para iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Estilos personalizados -->
     <link rel="stylesheet" href="style.css">
-    <!-- Vue.js 3 CDN -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 </head>
 <body class="bg-darkBg text-slate-100 min-h-screen flex flex-col font-sans overflow-x-hidden">
 
     <div id="app" class="flex flex-col flex-1 h-screen overflow-hidden">
-        <!-- Encabezado con estética Glassmorphism -->
         <header class="bg-slate-900/60 backdrop-blur-md border-b border-slate-800/80 px-6 py-4 flex items-center justify-between shrink-0 z-10">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-accentPrimary to-accentSecondary flex items-center justify-center shadow-lg shadow-indigo-500/20">
@@ -50,41 +44,42 @@
                     <p class="text-xs text-slate-400 font-medium">Autobalanceo por Acceso y Localidad de Datos</p>
                 </div>
             </div>
-            <!-- Estadísticas en tiempo real -->
-            <div class="flex gap-6 text-sm">
-                <div class="bg-slate-800/40 border border-slate-700/30 rounded-lg px-4 py-2 flex items-center gap-3">
-                    <span class="text-slate-400"><i class="fa-solid fa-cubes text-indigo-400 mr-1.5"></i>Nodos:</span>
+            <div class="flex gap-4 text-sm">
+                <div class="bg-slate-800/40 border border-slate-700/30 rounded-lg px-3 py-2 flex items-center gap-2">
+                    <i class="fa-solid fa-database text-sm" :class="backendAvailable ? 'text-emerald-400' : 'text-amber-400'"></i>
+                    <span class="font-semibold text-xs" :class="backendAvailable ? 'text-emerald-300' : 'text-amber-300'">
+                        {{ backendAvailable ? 'MySQL Conectado' : 'Modo Local (SQL embebido)' }}
+                    </span>
+                </div>
+                <div class="bg-slate-800/40 border border-slate-700/30 rounded-lg px-3 py-2 flex items-center gap-2">
+                    <span class="text-slate-400"><i class="fa-solid fa-cubes text-indigo-400 mr-1"></i>Nodos:</span>
                     <span class="font-bold text-indigo-300">{{ treeStats.size }}</span>
                 </div>
-                <div class="bg-slate-800/40 border border-slate-700/30 rounded-lg px-4 py-2 flex items-center gap-3">
-                    <span class="text-slate-400"><i class="fa-solid fa-arrows-up-down text-purple-400 mr-1.5"></i>Altura:</span>
+                <div class="bg-slate-800/40 border border-slate-700/30 rounded-lg px-3 py-2 flex items-center gap-2">
+                    <span class="text-slate-400"><i class="fa-solid fa-arrows-up-down text-purple-400 mr-1"></i>Altura:</span>
                     <span class="font-bold text-purple-300">{{ treeStats.height }}</span>
                 </div>
-                <div class="bg-slate-800/40 border border-slate-700/30 rounded-lg px-4 py-2 flex items-center gap-3" v-if="treeStats.size > 0">
-                    <span class="text-slate-400"><i class="fa-solid fa-crown text-amber-400 mr-1.5"></i>Raíz:</span>
+                <div class="bg-slate-800/40 border border-slate-700/30 rounded-lg px-3 py-2 flex items-center gap-2" v-if="treeStats.size > 0">
+                    <span class="text-slate-400"><i class="fa-solid fa-crown text-amber-400 mr-1"></i>Raiz:</span>
                     <span class="font-mono font-bold text-amber-300">{{ currentRootKey || 'N/A' }}</span>
                 </div>
             </div>
         </header>
 
-        <!-- Contenedor Principal (Panel Lateral + Lienzo) -->
         <main class="flex flex-1 overflow-hidden">
-            <!-- Barra Lateral de Operaciones y Simulación -->
             <aside class="w-80 bg-slate-900/40 backdrop-blur-md border-r border-slate-800/80 p-5 flex flex-col gap-6 overflow-y-auto shrink-0">
-                <!-- Panel de Operaciones -->
                 <div class="flex flex-col gap-4">
                     <h2 class="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-1 flex items-center gap-2">
-                        <i class="fa-solid fa-circle-play text-indigo-400"></i> Operaciones del Árbol
+                        <i class="fa-solid fa-circle-play text-indigo-400"></i> Operaciones del Arbol
                     </h2>
-                    
-                    <!-- Insertar -->
+
                     <div class="bg-slate-800/30 border border-slate-800 rounded-xl p-3 flex flex-col gap-2 hover:border-indigo-500/30 transition-all duration-300">
                         <div class="text-xs font-semibold text-indigo-400"><i class="fa-solid fa-plus-circle mr-1"></i>Insertar Nodo</div>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="text" v-model="insertKey" placeholder="Código (ej. 10)" 
+                            <input type="text" v-model="insertKey" placeholder="Codigo (ej. 10)"
                                    class="bg-slate-950/80 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-mono"
                                    @keyup.enter="runInsert">
-                            <input type="text" v-model="insertValue" placeholder="Descripción" 
+                            <input type="text" v-model="insertValue" placeholder="Descripcion"
                                    class="bg-slate-950/80 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
                                    @keyup.enter="runInsert">
                         </div>
@@ -96,11 +91,10 @@
                         </button>
                     </div>
 
-                    <!-- Buscar -->
                     <div class="bg-slate-800/30 border border-slate-800 rounded-xl p-3 flex flex-col gap-2 hover:border-purple-500/30 transition-all duration-300">
                         <div class="text-xs font-semibold text-purple-400"><i class="fa-solid fa-search mr-1"></i>Buscar Nodo (Locality Test)</div>
                         <div class="flex gap-2">
-                            <input type="text" v-model="searchKey" placeholder="Código a buscar..." 
+                            <input type="text" v-model="searchKey" placeholder="Codigo a buscar..."
                                    class="flex-1 bg-slate-950/80 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-purple-500 font-mono"
                                    @keyup.enter="runSearch">
                             <button @click="runSearch" :disabled="loading"
@@ -112,11 +106,10 @@
                         </div>
                     </div>
 
-                    <!-- Eliminar -->
                     <div class="bg-slate-800/30 border border-slate-800 rounded-xl p-3 flex flex-col gap-2 hover:border-red-500/30 transition-all duration-300">
                         <div class="text-xs font-semibold text-red-400"><i class="fa-solid fa-trash-can mr-1"></i>Eliminar Nodo</div>
                         <div class="flex gap-2">
-                            <input type="text" v-model="deleteKey" placeholder="Código a eliminar..." 
+                            <input type="text" v-model="deleteKey" placeholder="Codigo a eliminar..."
                                    class="flex-1 bg-slate-950/80 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-red-500 font-mono"
                                    @keyup.enter="runDelete">
                             <button @click="runDelete" :disabled="loading"
@@ -129,58 +122,50 @@
                     </div>
                 </div>
 
-                <!-- Carga Masiva y Limpieza -->
                 <div class="flex flex-col gap-2">
                     <button @click="runLoadSample" :disabled="loading"
                             class="w-full bg-slate-800 hover:bg-slate-700 active:bg-slate-900 border border-slate-700/50 rounded-xl py-2.5 text-xs font-medium tracking-wide transition-all flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-file-csv text-emerald-400 text-sm"></i>
-                        Cargar Productos de Muestra (CSV)
+                        <i class="fa-solid fa-database text-emerald-400 text-sm"></i>
+                        {{ backendAvailable ? 'Cargar Productos desde MySQL' : 'Cargar Productos (SQL embebido)' }}
                     </button>
                     <button @click="runClear" :disabled="loading"
                             class="w-full bg-slate-950/50 hover:bg-red-950/40 border border-slate-800 hover:border-red-800/50 rounded-xl py-2 text-xs font-medium text-slate-400 hover:text-red-400 tracking-wide transition-all flex items-center justify-center gap-2">
                         <i class="fa-solid fa-rotate-left"></i>
-                        Reiniciar Árbol Completo
+                        Reiniciar Arbol Completo
                     </button>
                 </div>
 
                 <hr class="border-slate-800/60 my-1">
 
-                <!-- Panel de Simulación / Paso a Paso -->
                 <div class="flex-1 flex flex-col gap-3 min-h-0">
                     <div class="flex items-center justify-between shrink-0">
                         <h2 class="text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                            <i class="fa-solid fa-film text-purple-400"></i> Simulación
+                            <i class="fa-solid fa-film text-purple-400"></i> Simulacion
                         </h2>
                         <span class="text-xs bg-indigo-500/15 text-indigo-400 px-2 py-0.5 rounded-full font-semibold border border-indigo-500/20" v-if="simulationSteps.length > 0">
                             {{ currentStepIndex + 1 }} / {{ simulationSteps.length }}
                         </span>
                     </div>
 
-                    <!-- Si no hay simulación activa -->
                     <div v-if="simulationSteps.length === 0" class="flex-1 flex flex-col items-center justify-center text-center p-4 border border-dashed border-slate-800 rounded-2xl bg-slate-900/20">
                         <i class="fa-solid fa-circle-info text-slate-600 text-2xl mb-2"></i>
                         <p class="text-xs text-slate-400 leading-relaxed">
-                            Realiza una operación (Insertar, Buscar o Eliminar) para ver la simulación del balanceo paso a paso.
+                            Realiza una operacion (Insertar, Buscar o Eliminar) para ver la simulacion del balanceo paso a paso.
                         </p>
                     </div>
 
-                    <!-- Si hay simulación activa -->
                     <div v-else class="flex-1 flex flex-col gap-4 min-h-0">
-                        <!-- Mensaje Informativo del Paso -->
                         <div class="bg-indigo-950/20 border border-indigo-900/30 rounded-xl p-3 flex flex-col gap-1 shrink-0 select-none">
-                            <span class="text-[10px] uppercase font-bold text-indigo-400 tracking-wider">Acción Actual</span>
+                            <span class="text-[10px] uppercase font-bold text-indigo-400 tracking-wider">Accion Actual</span>
                             <p class="text-xs text-slate-200 leading-normal font-medium">{{ currentStep.description }}</p>
                         </div>
 
-                        <!-- Reproductor paso a paso -->
                         <div class="bg-slate-950/40 border border-slate-900 rounded-xl p-3 flex flex-col gap-3 shrink-0">
-                            <!-- Slider -->
                             <div class="flex items-center gap-2">
                                 <input type="range" min="0" :max="simulationSteps.length - 1" v-model.number="currentStepIndex"
                                        class="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500">
                             </div>
 
-                            <!-- Botones del Reproductor -->
                             <div class="flex items-center justify-between gap-1.5">
                                 <button @click="goToStep(0)" title="Ir al inicio"
                                         class="flex-1 bg-slate-900 hover:bg-slate-800 active:bg-slate-950 rounded-lg py-1.5 text-xs text-slate-400 hover:text-slate-200 transition-all border border-slate-800/80">
@@ -204,20 +189,18 @@
                                 </button>
                             </div>
 
-                            <!-- Velocidad de reproducción -->
                             <div class="flex items-center justify-between text-[10px] text-slate-500 font-medium px-0.5">
                                 <span>Velocidad:</span>
                                 <select v-model.number="playbackSpeed" class="bg-transparent text-indigo-400 font-semibold focus:outline-none cursor-pointer">
                                     <option :value="1500" class="bg-slate-900 text-slate-300">Lenta (1.5s)</option>
                                     <option :value="800" class="bg-slate-900 text-slate-300">Normal (0.8s)</option>
-                                    <option :value="400" class="bg-slate-900 text-slate-300">Rápida (0.4s)</option>
+                                    <option :value="400" class="bg-slate-900 text-slate-300">Rapida (0.4s)</option>
                                 </select>
                             </div>
                         </div>
 
-                        <!-- Detalle del Nodo splayado en la simulación -->
                         <div class="bg-slate-800/20 border border-slate-800/50 rounded-xl p-3 flex flex-col gap-1.5 select-none" v-if="currentNodeDetail">
-                            <span class="text-[10px] uppercase font-bold text-purple-400 tracking-wider">Detalles de Búsqueda</span>
+                            <span class="text-[10px] uppercase font-bold text-purple-400 tracking-wider">Detalles de Busqueda</span>
                             <div class="text-xs flex flex-col gap-1">
                                 <div><span class="text-slate-400 font-medium">Clave:</span> <span class="font-mono font-semibold text-slate-100 bg-slate-900/60 px-1.5 py-0.5 rounded">{{ currentNodeDetail.key }}</span></div>
                                 <div class="truncate"><span class="text-slate-400 font-medium">Valor:</span> <span class="text-slate-200 font-medium" :title="currentNodeDetail.value">{{ currentNodeDetail.value }}</span></div>
@@ -227,23 +210,19 @@
                 </div>
             </aside>
 
-            <!-- Lienzo de visualización del Árbol (SVG interactivo) -->
             <section class="flex-1 bg-slate-950 relative flex items-center justify-center p-4">
-                <!-- Grid background de fondo con CSS premium -->
                 <div class="absolute inset-0 bg-grid-slate-900 opacity-20 pointer-events-none"></div>
-                <!-- Degradado de brillo de fondo -->
                 <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
                 <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-                <!-- Mensaje cuando el árbol está vacío -->
                 <div v-if="!treeState.tree" class="flex flex-col items-center gap-4 text-center z-10 max-w-sm px-6 py-8 border border-slate-800/80 rounded-3xl bg-slate-900/30 backdrop-blur-md">
                     <div class="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 text-3xl">
                         <i class="fa-solid fa-circle-nodes"></i>
                     </div>
                     <div>
-                        <h3 class="text-lg font-semibold font-outfit text-slate-200">El Árbol está Vacío</h3>
+                        <h3 class="text-lg font-semibold font-outfit text-slate-200">El Arbol esta Vacio</h3>
                         <p class="text-xs text-slate-400 mt-1 leading-relaxed">
-                            Comienza insertando un elemento manualmente usando el panel lateral o carga la muestra del CSV para ver cómo se estructura el Splay Tree.
+                            Comienza insertando un elemento manualmente usando el panel lateral o carga la muestra de datos para ver como se estructura el Splay Tree.
                         </p>
                     </div>
                     <button @click="runLoadSample" :disabled="loading"
@@ -252,13 +231,10 @@
                     </button>
                 </div>
 
-                <!-- Lienzo del árbol en SVG -->
                 <div v-else class="w-full h-full flex items-center justify-center relative select-none">
                     <svg ref="treeSvg" :view-box.camel="viewBox" class="w-full h-full cursor-grab active:cursor-grabbing select-none"
                          @mousedown="startPan" @mousemove="pan" @mouseup="endPan" @mouseleave="endPan" @wheel="handleZoom">
-                        <!-- Definiciones para filtros de sombra y marcadores de flechas -->
                         <defs>
-                            <!-- Filtro de resplandor para el nodo activo -->
                             <filter id="glow-indigo" x="-20%" y="-20%" width="140%" height="140%">
                                 <feGaussianBlur stdDeviation="6" result="blur" />
                                 <feComposite in="SourceGraphic" in2="blur" operator="over" />
@@ -269,37 +245,30 @@
                             </filter>
                         </defs>
 
-                        <!-- Contenedor del zoom/paneo -->
                         <g :transform="`translate(${panX}, ${panY}) scale(${zoomScale})`">
-                            <!-- Enlaces (líneas entre nodos) -->
                             <g class="edges">
                                 <path v-for="(edge, idx) in calculatedEdges" :key="`edge-${idx}`"
                                       :d="drawEdge(edge.x1, edge.y1, edge.x2, edge.y2)"
                                       class="edge-line" />
                             </g>
 
-                            <!-- Nodos -->
-                            <g v-for="node in calculatedNodes" :key="`node-${node.key}`" 
+                            <g v-for="node in calculatedNodes" :key="`node-${node.key}`"
                                class="node-group cursor-pointer"
                                :class="{ 'is-active': isNodeActive(node.key), 'is-root': isNodeRoot(node.key) }"
                                @click="selectNode(node)">
-                                <!-- Glow / Brillo para nodos especiales -->
-                                <circle v-if="isNodeActive(node.key)" :cx="node.x" :cy="node.y" r="32" 
+                                <circle v-if="isNodeActive(node.key)" :cx="node.x" :cy="node.y" r="32"
                                         class="fill-indigo-500/10 stroke-indigo-500/50 stroke-2 animate-pulse" filter="url(#glow-indigo)" />
-                                <circle v-else-if="isNodeRoot(node.key)" :cx="node.x" :cy="node.y" r="28" 
+                                <circle v-else-if="isNodeRoot(node.key)" :cx="node.x" :cy="node.y" r="28"
                                         class="fill-amber-500/5 stroke-amber-500/40 stroke-2" filter="url(#glow-amber)" />
 
-                                <!-- Círculo Principal -->
-                                <circle :cx="node.x" :cy="node.y" :r="nodeRadius" 
+                                <circle :cx="node.x" :cy="node.y" :r="nodeRadius"
                                         class="node-circle" />
 
-                                <!-- Texto con la clave del nodo -->
                                 <text :x="node.x" :y="node.y + 4" class="node-text font-mono">{{ node.key }}</text>
                             </g>
                         </g>
                     </svg>
 
-                    <!-- Control de zoom flotante -->
                     <div class="absolute bottom-4 right-4 flex gap-1.5 bg-slate-900/80 backdrop-blur border border-slate-800 rounded-xl p-1 shadow-lg">
                         <button @click="zoomIn" class="w-8 h-8 flex items-center justify-center hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-200 transition-all" title="Zoom in">
                             <i class="fa-solid fa-plus text-sm"></i>
@@ -312,7 +281,6 @@
                         </button>
                     </div>
 
-                    <!-- Ficha informativa de nodo seleccionado en el lienzo -->
                     <div v-if="selectedNode" class="absolute top-4 right-4 max-w-xs bg-slate-900/90 backdrop-blur border border-indigo-500/30 rounded-2xl p-4 shadow-xl select-none z-10">
                         <div class="flex justify-between items-start gap-4 mb-2">
                             <div class="text-[10px] uppercase font-bold text-indigo-400 tracking-wider">Nodo Seleccionado</div>
@@ -321,12 +289,12 @@
                         <div class="flex flex-col gap-1.5 text-xs">
                             <div><span class="text-slate-400 font-medium">Clave:</span> <span class="font-mono font-bold text-slate-200 bg-slate-950/60 px-1.5 py-0.5 rounded">{{ selectedNode.key }}</span></div>
                             <div>
-                                <span class="text-slate-400 font-medium">Descripción / Valor:</span>
+                                <span class="text-slate-400 font-medium">Descripcion / Valor:</span>
                                 <p class="text-slate-200 font-medium mt-1 bg-slate-950/30 border border-slate-800 rounded-lg p-2 leading-relaxed whitespace-normal break-words max-h-24 overflow-y-auto">
                                     {{ selectedNode.value }}
                                 </p>
                             </div>
-                            <button @click="searchSelected" 
+                            <button @click="searchSelected"
                                     class="mt-1 bg-indigo-600/20 hover:bg-indigo-600/35 border border-indigo-500/40 text-indigo-300 rounded-lg py-1.5 font-semibold text-center hover:text-white transition-all">
                                 <i class="fa-solid fa-location-crosshairs mr-1"></i> Splayear (Acceder)
                             </button>
@@ -337,13 +305,276 @@
         </main>
     </div>
 
-    <!-- Script de lógica del frontend -->
+    <!-- ============================================================
+         Splay Tree en JavaScript (modo standalone / sin backend)
+         Replica exacta del algoritmo implementado en Go (splay_tree.go)
+         ============================================================ -->
+    <script>
+    class SplayTreeJS {
+        constructor() {
+            this.root = null;
+            this._size = 0;
+            this._steps = [];
+            this._capturing = false;
+        }
+
+        _makeNode(key, value, parent) {
+            return { key, value, left: null, right: null, parent: parent || null };
+        }
+
+        _serialize(node) {
+            if (!node) return null;
+            return {
+                key: node.key,
+                value: node.value,
+                left: this._serialize(node.left),
+                right: this._serialize(node.right)
+            };
+        }
+
+        _capture(activeKey, description) {
+            if (this._capturing) {
+                this._steps.push({
+                    activeKey: activeKey,
+                    description: description,
+                    tree: this._serialize(this.root)
+                });
+            }
+        }
+
+        _rotateRight(x) {
+            const y = x.left;
+            x.left = y.right;
+            if (y.right) y.right.parent = x;
+            y.parent = x.parent;
+            if (!x.parent) this.root = y;
+            else if (x === x.parent.right) x.parent.right = y;
+            else x.parent.left = y;
+            y.right = x;
+            x.parent = y;
+        }
+
+        _rotateLeft(x) {
+            const y = x.right;
+            x.right = y.left;
+            if (y.left) y.left.parent = x;
+            y.parent = x.parent;
+            if (!x.parent) this.root = y;
+            else if (x === x.parent.left) x.parent.left = y;
+            else x.parent.right = y;
+            y.left = x;
+            x.parent = y;
+        }
+
+        _splay(x) {
+            while (x.parent) {
+                const p = x.parent;
+                const g = p.parent;
+                let desc;
+
+                if (!g) {
+                    if (x === p.left) {
+                        this._rotateRight(p);
+                        desc = `Zig Derecho (rotacion derecha sobre el padre ${p.key})`;
+                    } else {
+                        this._rotateLeft(p);
+                        desc = `Zig Izquierdo (rotacion izquierda sobre el padre ${p.key})`;
+                    }
+                } else if (x === p.left && p === g.left) {
+                    this._rotateRight(g);
+                    this._rotateRight(p);
+                    desc = `Zig-Zig Derecho (rotacion derecha sobre el abuelo ${g.key} y luego sobre el padre ${p.key})`;
+                } else if (x === p.right && p === g.right) {
+                    this._rotateLeft(g);
+                    this._rotateLeft(p);
+                    desc = `Zig-Zig Izquierdo (rotacion izquierda sobre el abuelo ${g.key} y luego sobre el padre ${p.key})`;
+                } else if (x === p.right && p === g.left) {
+                    this._rotateLeft(p);
+                    this._rotateRight(g);
+                    desc = `Zig-Zag Izquierdo-Derecho (rotacion izquierda sobre el padre ${p.key} y luego derecha sobre el abuelo ${g.key})`;
+                } else {
+                    this._rotateRight(p);
+                    this._rotateLeft(g);
+                    desc = `Zig-Zag Derecho-Izquierdo (rotacion derecha sobre el padre ${p.key} y luego izquierda sobre el abuelo ${g.key})`;
+                }
+
+                this._capture(x.key, desc);
+            }
+        }
+
+        insert(key, value) {
+            this._steps = [];
+            this._capturing = true;
+            this._capture(key, `Inicio de insercion para la clave ${key}`);
+
+            if (!this.root) {
+                this.root = this._makeNode(key, value);
+                this._size++;
+                this._capture(key, `Insercion completada. Clave ${key} es la nueva raiz.`);
+                this._capturing = false;
+                return { steps: this._steps, final: this.getState() };
+            }
+
+            let cur = this.root;
+            let parent = null;
+            while (cur) {
+                parent = cur;
+                if (key < cur.key) cur = cur.left;
+                else if (key > cur.key) cur = cur.right;
+                else {
+                    cur.value = value;
+                    this._splay(cur);
+                    this._capture(key, `Clave ${key} ya existia, valor actualizado. Nodo splayado a la raiz.`);
+                    this._capturing = false;
+                    return { steps: this._steps, final: this.getState() };
+                }
+            }
+
+            const n = this._makeNode(key, value, parent);
+            if (key < parent.key) parent.left = n;
+            else parent.right = n;
+            this._size++;
+            this._splay(n);
+            this._capture(key, `Insercion completada. Clave ${key} ahora es la raiz.`);
+            this._capturing = false;
+            return { steps: this._steps, final: this.getState() };
+        }
+
+        search(key) {
+            this._steps = [];
+            this._capturing = true;
+            this._capture(key, `Buscando la clave ${key} en el arbol`);
+
+            let cur = this.root;
+            let last = null;
+            while (cur) {
+                last = cur;
+                if (key < cur.key) cur = cur.left;
+                else if (key > cur.key) cur = cur.right;
+                else {
+                    this._splay(cur);
+                    this._capture(key, `Busqueda completada. Clave ${key} encontrada con descripcion: '${cur.value}'. Nodo splayado a la raiz.`);
+                    this._capturing = false;
+                    return { found: true, value: cur.value, steps: this._steps, final: this.getState() };
+                }
+            }
+            if (last) this._splay(last);
+            this._capture(key, `Busqueda completada. Clave ${key} NO encontrada en el arbol. El ultimo nodo visitado fue splayado a la raiz.`);
+            this._capturing = false;
+            return { found: false, value: null, steps: this._steps, final: this.getState() };
+        }
+
+        _searchInternal(key) {
+            let cur = this.root;
+            let last = null;
+            while (cur) {
+                last = cur;
+                if (key < cur.key) cur = cur.left;
+                else if (key > cur.key) cur = cur.right;
+                else {
+                    this._splay(cur);
+                    return true;
+                }
+            }
+            if (last) this._splay(last);
+            return false;
+        }
+
+        delete(key) {
+            this._steps = [];
+            this._capturing = true;
+            this._capture(key, `Iniciando eliminacion de la clave ${key} (primero se busca y se splaya a la raiz)`);
+
+            const found = this._searchInternal(key);
+            if (!found || this.root.key !== key) {
+                this._capture(key, `Clave ${key} no encontrada en el arbol, no se realizo ninguna eliminacion.`);
+                this._capturing = false;
+                return { deleted: false, steps: this._steps, final: this.getState() };
+            }
+
+            const left = this.root.left;
+            const right = this.root.right;
+            this._size--;
+
+            if (!left) {
+                this.root = right;
+                if (right) right.parent = null;
+            } else if (!right) {
+                this.root = left;
+                left.parent = null;
+            } else {
+                left.parent = null;
+                this.root = left;
+                let cur = left;
+                while (cur.right) cur = cur.right;
+                this._splay(cur);
+                this.root.right = right;
+                right.parent = this.root;
+            }
+
+            this._capture(key, `Clave ${key} eliminada exitosamente del arbol. Se unieron los subarboles.`);
+            this._capturing = false;
+            return { deleted: true, steps: this._steps, final: this.getState() };
+        }
+
+        insertSilent(key, value) {
+            if (!this.root) {
+                this.root = this._makeNode(key, value);
+                this._size++;
+                return;
+            }
+            let cur = this.root;
+            let parent = null;
+            while (cur) {
+                parent = cur;
+                if (key < cur.key) cur = cur.left;
+                else if (key > cur.key) cur = cur.right;
+                else { cur.value = value; this._splay(cur); return; }
+            }
+            const n = this._makeNode(key, value, parent);
+            if (key < parent.key) parent.left = n;
+            else parent.right = n;
+            this._size++;
+            this._splay(n);
+        }
+
+        height() {
+            const h = (node) => {
+                if (!node) return 0;
+                return Math.max(h(node.left), h(node.right)) + 1;
+            };
+            return h(this.root);
+        }
+
+        clear() {
+            this.root = null;
+            this._size = 0;
+        }
+
+        getState() {
+            return {
+                size: this._size,
+                height: this.height(),
+                tree: this._serialize(this.root)
+            };
+        }
+    }
+
+    // Dataset real extraido del volcado SQL (proyecto_retail.sql)
+    // Fuente: Online Retail Dataset - transacciones comerciales reales
+    const SAMPLE_DATA = {
+        "10002":"INFLATABLE POLITICAL GLOBE","10133":"COLOURING PENCILS BROWN TUBE","10135":"COLOURING PENCILS BROWN TUBE","16161P":"WRAP ENGLISH ROSE","16169N":"WRAP BLUE RUSSIAN FOLKART","16207A":"PINK STRAWBERRY HANDBAG","16225":"RATTLE SNAKE EGGS","18097C":"WHITE TALL PORCELAIN T-LIGHT HOLDER","20675":"BLUE SPOTTY BOWL","20676":"RED SPOTTY BOWL","20677":"PINK SPOTTY BOWL","20685":"RED SPOTTY COIR DOORMAT","20695":"FLORAL BLUE MONSTER","20703":"BLUE PADDED SOFT MOBILE","20711":"JUMBO BAG TOYS","20719":"WOODLAND CHARLOTTE BAG","20724":"RED SPOTTY CHARLOTTE BAG","20725":"LUNCH BAG RED SPOTTY","20726":"LUNCH BAG WOODLAND","20728":"LUNCH BAG CARS BLUE","20734":"SILVER MINI TAPE MEASURE","20747":"PICCADILLY TEA SET","20749":"ASSORTED COLOUR MINI CASES","20751":"FUNKY WASHING UP GLOVES ASSORTED","20752":"RETRO BLUE SPOTTY WASHING UP GLOVES","20753":"RETRO PINK SPOT WASHING UP GLOVES","20754":"RETRO RED SPOTTY WASHING UP GLOVES","20782":"CAMOUFLAGE EAR MUFF HEADPHONES","20823":"GOLD WINE GOBLET","20825":"GOLD WINE GLASS","20826":"SILVER APERITIF GLASS","20827":"GOLD APERITIF GLASS","20828":"GLITTER BUTTERFLY CLIPS","20870":"OPULENT VELVET CANDLE IN BOX","20892":"SET/3 TALL GLASS CANDLE HOLDER PINK","20897":"VINTAGE NOTEBOOK PARIS DAYS","20967":"GREY FLORAL FELTCRAFT SHOULDER BAG","20970":"PINK FLORAL FELTCRAFT SHOULDER BAG","20971":"PINK BLUE FELT CRAFT TRINKET BOX","20972":"PINK CREAM FELT CRAFT TRINKET BOX","20982":"12 PENCILS TALL TUBE SKULLS","20984":"12 PENCILS TALL TUBE POSY","20987":"GEISHA GIRL CHOPSTICKS SET/5","20989":"URBAN CHIC CHOPSTICKS SET/5","21033":"JUMBO BAG CHARLIE AND LOLA TOYS","21035":"SET/2 RED SPOTTY TEA TOWELS","21041":"RED SPOTTY OVEN GLOVE DOUBLE","21058":"PARTY INVITES WOODLAND","21063":"PARTY INVITES JAZZ HEARTS","21085":"SET/6 WOODLAND PAPER CUPS","21091":"SET/6 WOODLAND PAPER PLATES","21099":"SET/6 STRAWBERRY PAPER CUPS","21100":"CHARLIE AND LOLA CHARLOTTE BAG","21133":"PAINTED BIRD ASSORTED CHRISTMAS","21143":"ANTIQUE GLASS HEART DECORATION","21159":"MOODY BOY DOOR HANGER","21161":"KEEP OUT BOYS DOOR HANGER","21162":"TOXIC AREA DOOR HANGER","21172":"PARTY METAL SIGN","21179":"NO JUNK MAIL METAL SIGN","21181":"PLEASE ONE PERSON METAL SIGN","21212":"PACK OF 72 RETRO SPOT CAKE CASES","21217":"RED SPOTTY ROUND CAKE TINS","21231":"SWEETHEART CERAMIC TRINKET BOX","21232":"STRAWBERRY CERAMIC TRINKET BOX","21241":"GREEN SPOTTY CUP","21244":"BLUE SPOTTY PLATE","21245":"GREEN SPOTTY PLATE","21248":"DOOR HANGER MUM + DADS ROOM","21252":"SET OF MEADOW FLOWER STICKERS","21258":"VICTORIAN SEWING BOX LARGE","21299":"EDWARDIAN TOILET ROLL UNIT","21326":"AGED GLASS SILVER T-LIGHT HOLDER","21329":"DINOSAURS WRITING SET","21333":"CLASSIC WHITE FRAME","21351":"CINAMMON & ORANGE WREATH","21352":"EUCALYPTUS & PINECONE WREATH","21360":"JOY LARGE WOOD LETTERS","21364":"PEACE SMALL WOOD LETTERS","21371":"MIRRORED WALL ART POPPIES","21410":"COUNTRY COTTAGE DOORSTOP GREEN","21411":"GINGHAM HEART DOORSTOP RED","21428":"SET3 BOOK BOX GREEN GINGHAM FLOWER","21430":"SET/3 RED GINGHAM ROSE STORAGE BOX","21470":"FLOWER VINE RAFFIA FOOD COVER","21472":"LADYBIRD + BEE RAFFIA FOOD COVER","21479":"WHITE SKULL HOT WATER BOTTLE","21481":"FAWN BLUE HOT WATER BOTTLE","21482":"MUSHROOM BLUE HOT WATER BOTTLE","21484":"CHICK GREY HOT WATER BOTTLE","21485":"RED SPOT HEART HOT WATER BOTTLE","21489":"BLUE WHITE SCARF HOT WATER BOTTLE","21490":"SET OF THREE 50S GIFT WRAPS","21491":"SET OF THREE VINTAGE GIFT WRAPS","21493":"VINTAGE DESIGN GIFT TAGS","21495":"SKULLS WRAP","21523":"FANCY FONT HOME SWEET HOME DOORMAT","21582":"KINGS CHOICE SMALL TUBE MATCHES","21584":"RETRO SPOT SMALL TUBE MATCHES","21586":"KINGS CHOICE GIANT TUBE MATCHES","21587":"COSY HOUR GIANT TUBE MATCHES","21588":"RETRO SPOT GIANT TUBE MATCHES","21590":"KINGS CHOICE CIGAR BOX MATCHES","21592":"RETRO SPOT CIGAR BOX MATCHES","21638":"ASSORTED TUTTI FRUTTI NOTEBOOK","21639":"ASSORTED TUTTI FRUTTI KEYRING","21668":"RED STRIPE CERAMIC DRAWER KNOB","21669":"BLUE STRIPE CERAMIC DRAWER KNOB","21670":"BLUE SPOT CERAMIC DRAWER KNOB","21671":"RED SPOT CERAMIC DRAWER KNOB","21672":"WHITE SPOT RED CERAMIC DRAWER KNOB","21673":"WHITE SPOT BLUE CERAMIC DRAWER KNOB","21705":"BAG 500g SWIRLY MARBLES","21706":"FOLDING UMBRELLA RED/WHITE SPOT","21707":"FOLDING UMBRELLA BLACK/BLUE SPOT","21708":"FOLDING UMBRELLA CREAM/MULTI SPOT","21710":"FOLDING UMBRELLA PINK/WHITE SPOT","21711":"FOLDING UMBRELLA WHITE/RED SPOT","21731":"RED TOADSTOOL LED NIGHT LIGHT","21733":"RED HANGING HEART T-LIGHT HOLDER","21754":"HOME BUILDING BLOCK WORD","21755":"LOVE BUILDING BLOCK WORD","21756":"BATH BUILDING BLOCK WORD","21784":"SHOE SHINE BOX","21790":"VINTAGE SNAP CARDS","21791":"VINTAGE HEADS AND TAILS CARD GAME","21817":"GLITTER CHRISTMAS TREE","21818":"GLITTER CHRISTMAS HEART","21819":"GLITTER CHRISTMAS STAR","21821":"GLITTER STAR GARLAND WITH BELLS","21826":"EIGHT PIECE DINOSAUR SET","21827":"EIGHT PIECE CREEPY CRAWLIE SET","21828":"EIGHT PIECE SNAKE SET","21829":"DINOSAUR KEYRINGS ASSORTED","21837":"CROSS STITCH ALPHABET CUSHION COVER","21842":"PINK HEART CANDY BUTTON CALCULATOR","21864":"UNION JACK FLAG PASSPORT COVER","21865":"PINK UNION JACK PASSPORT COVER","21867":"PINK UNION JACK LUGGAGE TAG","21868":"POTTING SHED TEA MUG","21869":"POTTING SHED COFFEE MUG","21871":"SAVE THE PLANET MUG","21875":"KINGS CHOICE MUG","21876":"POTTERING MUG","21888":"BINGO SET","21889":"WOODEN BOX OF DOMINOES","21895":"POTTING SHED SOW N GROW SET","21896":"POTTING SHED TWINE","21908":"CHOCOLATE THIS WAY METAL SIGN","21912":"VINTAGE SNAKES & LADDERS","21913":"VINTAGE SEASIDE JIGSAW PUZZLES","21916":"SET 12 RETRO WHITE CHALK STICKS","21928":"JUMBO BAG SCANDINAVIAN PAISLEY","21929":"JUMBO BAG PINK VINTAGE PAISLEY","21930":"JUMBO STORAGE BAG SKULLS","21931":"JUMBO STORAGE BAG SUKI","21955":"UNION JACK GUNS & ROSES DOORMAT","21977":"PACK OF 60 PINK PAISLEY CAKE CASES","21987":"PACK OF 6 SKULL PAPER CUPS","21989":"PACK OF 20 SKULL PAPER NAPKINS","22024":"RAINY LADIES BIRTHDAY CARD","22025":"RING OF ROSES BIRTHDAY CARD","22026":"BANQUET BIRTHDAY CARD","22029":"SPACE BOY BIRTHDAY CARD","22031":"BOTANICAL LAVENDER BIRTHDAY CARD","22041":"RECORD FRAME 7 SINGLE SIZE","22063":"CERAMIC BOWL WITH STRAWBERRY DESIGN","22064":"PINK DOUGHNUT TRINKET POT","22065":"CHRISTMAS PUDDING TRINKET POT","22080":"RIBBON REEL SPOTS DESIGN","22082":"RIBBON REEL STRIPES DESIGN","22083":"PAPER CHAIN KIT RETRO SPOT","22086":"PAPER CHAIN KIT 50S CHRISTMAS","22087":"PAPER BUNTING WHITE LACE","22089":"PAPER BUNTING VINTAGE PAISLEY","22090":"PAPER BUNTING RETRO SPOTS","22091":"EMPIRE TISSUE BOX","22107":"PIZZA PLATE IN BOX","22109":"FULL ENGLISH BREAKFAST PLATE","22111":"SCOTTIE DOG HOT WATER BOTTLE","22112":"CHOCOLATE HOT WATER BOTTLE","22113":"GREY HEART HOT WATER BOTTLE","22114":"HOT WATER BOTTLE TEA AND SYMPATHY","22119":"PEACE WOODEN BLOCK LETTERS","22121":"NOEL WOODEN BLOCK LETTERS","22122":"SET OF 2 FANCY FONT TEA TOWELS","22125":"UNION JACK HOT WATER BOTTLE","22127":"PARTY CONES CARNIVAL ASSORTED","22128":"PARTY CONES CANDY ASSORTED","22130":"PARTY CONE CHRISTMAS DECORATION","22138":"BAKING SET 9 PIECE RETROSPOT","22139":"RETRO SPOT TEA SET CERAMIC 11 PC","22142":"CHRISTMAS CRAFT WHITE FAIRY","22143":"CHRISTMAS CRAFT HEART DECORATIONS","22145":"CHRISTMAS CRAFT HEART STOCKING","22154":"ANGEL DECORATION 3 BUTTONS","22155":"STAR DECORATION RUSTIC","22163":"HEART STRING MEMO HOLDER HANGING","22178":"VICTORIAN GLASS HANGING T-LIGHT","22179":"SET 10 LIGHTS NIGHT OWL","22180":"RETRO SPOT LAMP","22190":"LOCAL CAFE MUG","22194":"BLACK DINER WALL CLOCK","22195":"HEART MEASURING SPOONS LARGE","22199":"FRYING PAN RED POLKADOT","22212":"FOUR HOOK WHITE LOVEBIRDS","22218":"CAKE STAND LACE WHITE","22219":"LOVEBIRD HANGING DECORATION WHITE","22222":"CAKE PLATE LOVEBIRD WHITE","22232":"3 PIECE JIGSAW TOADSTOOLS","22241":"GARLAND WOODEN HAPPY EASTER","22253":"6 CROCHET STRAWBERRIES","22271":"FELTCRAFT DOLL ROSIE","22272":"FELTCRAFT DOLL MARIA","22273":"FELTCRAFT DOLL MOLLY","22274":"FELTCRAFT DOLL EMILY","22275":"WEEKEND BAG VINTAGE ROSE PAISLEY","22276":"WASH BAG VINTAGE ROSE PAISLEY","22282":"12 EGG HOUSE PAINTED WOOD","22294":"HEART FILIGREE DOVE SMALL","22295":"HEART FILIGREE DOVE LARGE","22296":"HEART IVORY TRELLIS LARGE","22300":"COFFEE MUG DOG + BALL DESIGN","22301":"COFFEE MUG CAT + BIRD DESIGN","22302":"COFFEE MUG PEARS DESIGN","22303":"COFFEE MUG APPLES DESIGN","22304":"COFFEE MUG BLUE PAISLEY DESIGN","22305":"COFFEE MUG PINK PAISLEY DESIGN","22319":"HAIRCLIPS FORTIES FABRIC ASSORTED","22320":"BIRDS MOBILE VINTAGE DESIGN","22321":"BIRD DECORATION RED SPOT","22333":"RETRO SPORT PARTY BAG + STICKER SET","22335":"HEART DECORATION PAINTED ZINC","22349":"DOG BOWL CHASING BALL DESIGN","22350":"CAT BOWL","22352":"LUNCHBOX WITH CUTLERY RETROSPOT","22353":"LUNCHBOX WITH CUTLERY FAIRY CAKES","22356":"CHARLOTTE BAG PINK/WHITE SPOTS","35004B":"SET OF 3 BLACK FLYING DUCKS","35071":"ASSORTED SANTA CHRISTMAS DECORATION","35400":"WOODEN BOX ADVENT CALENDAR","35751C":"PURPLE CURRENT CANDLE RING","35916B":"BLUE FELT HANGING HEART W FLOWER","35916C":"PINK FELT HANGING HEART W FLOWER","35951":"FOLKART BAUBLE CHRISTMAS DECORATION","37370":"RETRO COFFEE MUGS ASSORTED","37446":"MINI CAKE STAND WITH HANGING CAKES","37449":"CERAMIC CAKE STAND + HANGING CAKES","37450":"CERAMIC CAKE BOWL + HANGING CAKES","37485":"ENGLISH ROSE TEA SET IN GIFT BOX","37492A":"YELLOW RED FLOWER PIGGY BANK","37492C":"GREEN BLUE FLOWER PIGGY BANK","44230":"SQUARE MIRROR CURTAIN","47505":"MINATURE COLOURED GARDENING SET","47566B":"TEA TIME PARTY BUNTING","47591A":"CAROUSEL DES CHILDS APRON","47591D":"PINK FAIRY CAKE CHILDS APRON","48111":"DOOR MAT 3 SMILEY CATS","48173C":"DOOR MAT BLACK FLOCK","48185":"DOOR MAT FAIRY CAKE","48187":"DOOR MAT NEW ENGLAND","48194":"DOORMAT HEARTS","48195":"DOOR MAT GREEN PAISLEY","71477":"COLOUR GLASS STAR T-LIGHT HOLDER","72739B":"WHITE CHOCOLATE SCENT CANDLE","72741":"GRAND CHOCOLATE CANDLE","72756":"FAIRY CAKE CANDLES","72760B":"VINTAGE CREAM 3 BASKET CAKE STAND","72783":"BLACK SILT SQU CANDLE PLATE","79323P":"PINK CHERRY LIGHTS","79323S":"SILVER CHERRY LIGHTS","79323W":"WHITE CHERRY LIGHTS","82001S":"VINYL RECORD FRAME SILVER","82483":"WOOD 2 DRAWER CABINET WHITE FINISH","82486":"WOOD S/3 CABINET ANT WHITE FINISH","82494L":"WOODEN FRAME ANTIQUE WHITE","82551":"LAUNDRY 15C METAL SIGN","82567":"AIRLINE LOUNGE METAL SIGN","82580":"BATHROOM METAL SIGN","82582":"AREA PATROLLED METAL SIGN","82600":"NO SINGING METAL SIGN","82613D":"METAL SIGN CUPCAKE SINGLE HOOK","82616B":"FRAPPUCINO SCARF KNITTING KIT","84029E":"RED WOOLLY HOTTIE WHITE HEART","84029G":"KNITTED UNION FLAG HOT WATER BOTTLE","84031A":"CHARLIE+LOLA RED HOT WATER BOTTLE","84031B":"CHARLIE LOLA BLUE HOT WATER BOTTLE","84032A":"CHARLIE+LOLA PINK HOT WATER BOTTLE","84032B":"CHARLIE + LOLA RED HOT WATER BOTTLE","84251J":"GREETING CARD THE BLACK CAT","84327A":"PINK JUMPER LARRY THE LAMB","84507B":"STRIPES DESIGN MONKEY DOLL","84519A":"TOMATO CHARLIE+LOLA COASTER SET","84519B":"CARROT CHARLIE+LOLA COASTER SET","84568":"GIRLS ALPHABET IRON ON PATCHES","84582":"PINK CROCHET CAT WITH SCARF","84596F":"SMALL MARSHMALLOWS PINK BOWL","84596L":"BISCUITS SMALL BOWL LIGHT BLUE","84598":"BOYS ALPHABET IRON ON PATCHES","84691":"PACK 20 DOLLY PEGS","84791":"GINGHAM HEART DECORATION","84836":"ZINC METAL HEART DECORATION","84849B":"FAIRY SOAP SOAP HOLDER","84879":"ASSORTED COLOUR BIRD ORNAMENT","84884A":"ANT WHITE WIRE HEART SPIRAL","84899E":"YELLOW + BROWN BEAR FELT PURSE KIT","84912B":"GREEN ROSE WASHBAG","84946":"ANTIQUE SILVER TEA GLASS ETCHED","84949":"SILVER HANGING T-LIGHT HOLDER","84951A":"S/4 PISTACHIO LOVEBIRD COASTERS","84970S":"HANGING HEART ZINC T-LIGHT HOLDER","84971L":"LARGE HEART FLOWERS HOOK","84988":"SET OF 72 PINK HEART PAPER DOILIES","84991":"60 TEATIME FAIRY CAKE CASES","84997A":"GREEN 3 PIECE MINI DOTS CUTLERY SET","84997B":"RED 3 PIECE MINI DOTS CUTLERY SET","84997C":"BLUE 3 PIECE MINI DOTS CUTLERY SET","84997D":"PINK 3 PIECE MINI DOTS CUTLERY SET","85014A":"BLACK/BLUE DOTS RUFFLED UMBRELLA","85014B":"RED/WHITE DOTS RUFFLED UMBRELLA","85014C":"BLUE/BROWN DOTS RUFFLED UMBRELLA","85014D":"PINK/BROWN DOTS RUFFLED UMBRELLA","85042":"ANTIQUE LILY FAIRY LIGHTS","85044":"RED REINDEER STRING OF 20 LIGHTS","85045":"GREEN CHRISTMAS TREE STRING 20LIGHT","85048":"15CM CHRISTMAS GLASS BALL 20 LIGHTS","85066":"CREAM SWEETHEART MINI CHEST","85071A":"BLUE CHARLIE+LOLA PERSONAL DOORSIGN","85071B":"RED CHARLIE+LOLA PERSONAL DOORSIGN","85099B":"JUMBO BAG RED WHITE SPOTTY","85123A":"WHITE HANGING HEART T-LIGHT HOLDER","85129A":"WHITE PEARL BEADED HEART SMALL","85132A":"CHARLIE + LOLA BISCUITS TINS","85132C":"CHARLIE AND LOLA FIGURES TINS","85150":"LADIES & GENTLEMEN METAL SIGN","85152":"HAND OVER THE CHOCOLATE SIGN","85178":"VICTORIAN SEWING KIT","85183A":"CHARLIE & LOLA WASTEPAPER BIN BLUE","85183B":"CHARLIE & LOLA WASTEPAPER BIN FLORA","85206A":"CREAM FELT EASTER EGG BASKET","85216":"ASSORTED CAKES FRIDGE MAGNETS","85232B":"SET/3 RUSSIAN DOLL STACKING TINS","85232D":"SET/3 DECOUPAGE STACKING TINS","90000A":"RASPBERRY ANT COPPER FLOWER NECKLAC","90003B":"ROSE COLOUR PAIR HEART HAIR SLIDES","90003C":"MIDNIGHT BLUE PAIR HEART HAIR SLIDE","90003D":"CRYSTAL PAIR HEART HAIR SLIDES","90013C":"GREEN VINTAGE EARRINGS","90023":"FILIGREE DIAMANTE EARRINGS","90024B":"NEW BAROQUE BFLY NECKLACE RED","90036D":"FLOWER GLASS GARLAND NECKL 36 BLACK","90062":"CARNIVAL BRACELET","90067A":"PINK VINTAGE VICTORIAN EARRINGS","90067B":"BROWN VINTAGE VICTORIAN EARRINGS","90082D":"DIAMANTE BOW BROOCH BLACK COLOUR","90121B":"VINTAGE ROSE BEAD BRACELET BLUE","90131":"PINK/AMETHYST/GOLD NECKLACE","90134":"OLD ROSE COMBO BEAD NECKLACE","90145":"SILVER HOOP EARRINGS WITH FLOWER","90168":"2 DAISIES HAIR COMB","90175A":"WHITE GLASS CHUNKY CHARM BRACELET","90185B":"AMETHYST DIAMANTE EXPANDABLE RING","90185C":"BLACK DIAMANTE EXPANDABLE RING","90195B":"BLACK GEMSTONE BRACELET","90199C":"5 STRAND GLASS NECKLACE CRYSTAL","90200A":"PURPLE SWEETHEART BRACELET","90200B":"BLACK SWEETHEART BRACELET","90200C":"BLUE SWEETHEART BRACELET","90200D":"PINK SWEETHEART BRACELET","90200E":"GREEN SWEETHEART BRACELET","90209A":"PURPLE ENAMEL+GLASS HAIR COMB","90209C":"PINK ENAMEL+GLASS HAIR COMB","POST":"POSTAGE"
+    };
+    </script>
+
+    <!-- ============================================================
+         Aplicacion Vue.js - Modo dual: Backend Go+MySQL / Standalone
+         ============================================================ -->
     <script>
         const { createApp, ref, computed, onMounted, watch } = Vue;
 
         createApp({
             setup() {
-                // Estado del árbol
                 const treeState = ref({ size: 0, height: 0, tree: null });
                 const treeStats = computed(() => ({
                     size: treeState.value.size,
@@ -353,41 +584,35 @@
                     return treeState.value.tree ? treeState.value.tree.key : null;
                 });
 
-                // Inputs
                 const insertKey = ref('');
                 const insertValue = ref('');
                 const searchKey = ref('');
                 const deleteKey = ref('');
-
-                // Estado de carga
                 const loading = ref(false);
 
-                // Simulación paso a paso
                 const simulationSteps = ref([]);
                 const currentStepIndex = ref(0);
                 const playing = ref(false);
-                const playbackSpeed = ref(800); // ms
+                const playbackSpeed = ref(800);
                 let playbackInterval = null;
 
-                // Selección del nodo en el lienzo
                 const selectedNode = ref(null);
-
-                // Nodo splayado en la simulación activa
                 const currentNodeDetail = ref(null);
+
+                const backendAvailable = ref(false);
+                const localTree = new SplayTreeJS();
 
                 const currentStep = computed(() => {
                     if (simulationSteps.value.length === 0) return null;
                     return simulationSteps.value[currentStepIndex.value];
                 });
 
-                // Si cambia el paso de la simulación, actualizamos la vista del árbol a ese snapshot
                 watch(currentStepIndex, (newIdx) => {
                     if (simulationSteps.value.length > 0 && simulationSteps.value[newIdx]) {
                         treeState.value.tree = simulationSteps.value[newIdx].tree;
                     }
                 });
 
-                // Configuración de visualización SVG (Paneo y Zoom)
                 const zoomScale = ref(1.0);
                 const panX = ref(0);
                 const panY = ref(0);
@@ -395,47 +620,89 @@
                 const startX = ref(0);
                 const startY = ref(0);
                 const nodeRadius = ref(20);
+                const viewBox = computed(() => `0 0 800 600`);
 
-                const viewBox = computed(() => {
-                    return `0 0 800 600`;
-                });
-
-                // Detectar si el frontend corre en local o en un servidor remoto (ej: Vercel)
-                const apiBase = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-                    ? '' 
+                const apiBase = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+                    ? ''
                     : 'http://localhost:8080';
 
-                // Cargar estado inicial del árbol
-                const fetchTree = async () => {
+                const checkBackend = async () => {
                     try {
-                        const res = await fetch(`${apiBase}/api/tree`);
-                        const data = await res.json();
-                        treeState.value = data;
-                    } catch (err) {
-                        console.error("Error al obtener árbol:", err);
+                        const controller = new AbortController();
+                        const timeout = setTimeout(() => controller.abort(), 2000);
+                        const res = await fetch(`${apiBase}/api/tree`, { signal: controller.signal });
+                        clearTimeout(timeout);
+                        if (res.ok) {
+                            backendAvailable.value = true;
+                            const data = await res.json();
+                            treeState.value = data;
+                        } else {
+                            backendAvailable.value = false;
+                        }
+                    } catch {
+                        backendAvailable.value = false;
                     }
                 };
 
-                // Acciones
+                // --- Acciones en modo BACKEND ---
+                const apiInsert = async () => {
+                    const res = await fetch(`${apiBase}/api/insert`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ key: insertKey.value, value: insertValue.value })
+                    });
+                    return await res.json();
+                };
+                const apiSearch = async () => {
+                    const res = await fetch(`${apiBase}/api/search`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ key: searchKey.value })
+                    });
+                    return await res.json();
+                };
+                const apiDelete = async () => {
+                    const res = await fetch(`${apiBase}/api/delete`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ key: deleteKey.value })
+                    });
+                    return await res.json();
+                };
+                const apiClear = async () => {
+                    const res = await fetch(`${apiBase}/api/clear`, { method: 'POST' });
+                    return await res.json();
+                };
+                const apiLoadSample = async () => {
+                    const res = await fetch(`${apiBase}/api/load-sample`, { method: 'POST' });
+                    return await res.json();
+                };
+
+                // --- Handlers unificados ---
                 const runInsert = async () => {
                     if (!insertKey.value.trim()) return;
-                    loading.value = ref(true);
+                    loading.value = true;
                     stopPlayback();
                     try {
-                        const res = await fetch(`${apiBase}/api/insert`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ key: insertKey.value, value: insertValue.value })
-                        });
-                        const data = await res.json();
-                        if (data.success) {
-                            simulationSteps.value = data.steps;
+                        if (backendAvailable.value) {
+                            const data = await apiInsert();
+                            if (data.success) {
+                                simulationSteps.value = data.steps;
+                                currentStepIndex.value = 0;
+                                treeState.value = data.final;
+                                insertKey.value = '';
+                                insertValue.value = '';
+                                currentNodeDetail.value = null;
+                                startPlayback();
+                            }
+                        } else {
+                            const result = localTree.insert(insertKey.value, insertValue.value || insertKey.value);
+                            simulationSteps.value = result.steps;
                             currentStepIndex.value = 0;
-                            treeState.value = data.final;
+                            treeState.value = result.final;
                             insertKey.value = '';
                             insertValue.value = '';
                             currentNodeDetail.value = null;
-                            // Auto reproducir la animación
                             startPlayback();
                         }
                     } catch (err) {
@@ -450,22 +717,29 @@
                     loading.value = true;
                     stopPlayback();
                     try {
-                        const res = await fetch(`${apiBase}/api/search`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ key: searchKey.value })
-                        });
-                        const data = await res.json();
-                        if (data.success) {
-                            simulationSteps.value = data.steps;
-                            currentStepIndex.value = 0;
-                            treeState.value = data.final;
-                            searchKey.value = '';
-                            if (data.found) {
-                                currentNodeDetail.value = { key: data.steps[0].activeKey, value: data.value };
-                            } else {
-                                currentNodeDetail.value = { key: data.steps[0].activeKey, value: "No encontrado en el árbol" };
+                        if (backendAvailable.value) {
+                            const data = await apiSearch();
+                            if (data.success) {
+                                simulationSteps.value = data.steps;
+                                currentStepIndex.value = 0;
+                                treeState.value = data.final;
+                                const key = searchKey.value;
+                                searchKey.value = '';
+                                currentNodeDetail.value = data.found
+                                    ? { key: key, value: data.value }
+                                    : { key: key, value: "No encontrado en el arbol" };
+                                startPlayback();
                             }
+                        } else {
+                            const key = searchKey.value;
+                            const result = localTree.search(key);
+                            simulationSteps.value = result.steps;
+                            currentStepIndex.value = 0;
+                            treeState.value = result.final;
+                            searchKey.value = '';
+                            currentNodeDetail.value = result.found
+                                ? { key: key, value: result.value }
+                                : { key: key, value: "No encontrado en el arbol" };
                             startPlayback();
                         }
                     } catch (err) {
@@ -480,16 +754,21 @@
                     loading.value = true;
                     stopPlayback();
                     try {
-                        const res = await fetch(`${apiBase}/api/delete`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ key: deleteKey.value })
-                        });
-                        const data = await res.json();
-                        if (data.success) {
-                            simulationSteps.value = data.steps;
+                        if (backendAvailable.value) {
+                            const data = await apiDelete();
+                            if (data.success) {
+                                simulationSteps.value = data.steps;
+                                currentStepIndex.value = 0;
+                                treeState.value = data.final;
+                                deleteKey.value = '';
+                                currentNodeDetail.value = null;
+                                startPlayback();
+                            }
+                        } else {
+                            const result = localTree.delete(deleteKey.value);
+                            simulationSteps.value = result.steps;
                             currentStepIndex.value = 0;
-                            treeState.value = data.final;
+                            treeState.value = result.final;
                             deleteKey.value = '';
                             currentNodeDetail.value = null;
                             startPlayback();
@@ -502,7 +781,7 @@
                 };
 
                 const runClear = async () => {
-                    if (!confirm("¿Seguro que deseas vaciar por completo el Splay Tree?")) return;
+                    if (!confirm("Seguro que deseas vaciar por completo el Splay Tree?")) return;
                     loading.value = true;
                     stopPlayback();
                     simulationSteps.value = [];
@@ -510,9 +789,13 @@
                     selectedNode.value = null;
                     currentNodeDetail.value = null;
                     try {
-                        const res = await fetch(`${apiBase}/api/clear`, { method: 'POST' });
-                        const data = await res.json();
-                        treeState.value = data.final;
+                        if (backendAvailable.value) {
+                            const data = await apiClear();
+                            treeState.value = data.final;
+                        } else {
+                            localTree.clear();
+                            treeState.value = localTree.getState();
+                        }
                     } catch (err) {
                         console.error(err);
                     } finally {
@@ -528,10 +811,19 @@
                     selectedNode.value = null;
                     currentNodeDetail.value = null;
                     try {
-                        const res = await fetch(`${apiBase}/api/load-sample`, { method: 'POST' });
-                        const data = await res.json();
-                        treeState.value = data.final;
-                        alert(`¡Se cargaron ${data.loaded} productos desde MySQL en el Splay Tree!`);
+                        if (backendAvailable.value) {
+                            const data = await apiLoadSample();
+                            treeState.value = data.final;
+                            alert(`Se cargaron ${data.loaded} productos desde MySQL en el Splay Tree.`);
+                        } else {
+                            localTree.clear();
+                            const entries = Object.entries(SAMPLE_DATA);
+                            for (const [code, desc] of entries) {
+                                localTree.insertSilent(code, desc);
+                            }
+                            treeState.value = localTree.getState();
+                            alert(`Se cargaron ${entries.length} productos (SQL embebido) en el Splay Tree.`);
+                        }
                     } catch (err) {
                         console.error(err);
                     } finally {
@@ -539,7 +831,6 @@
                     }
                 };
 
-                // Reproductor paso a paso
                 const nextStep = () => {
                     if (currentStepIndex.value < simulationSteps.value.length - 1) {
                         currentStepIndex.value++;
@@ -549,23 +840,17 @@
                 };
 
                 const prevStep = () => {
-                    if (currentStepIndex.value > 0) {
-                        currentStepIndex.value--;
-                    }
+                    if (currentStepIndex.value > 0) currentStepIndex.value--;
                 };
 
                 const goToStep = (idx) => {
-                    if (idx >= 0 && idx < simulationSteps.value.length) {
-                        currentStepIndex.value = idx;
-                    }
+                    if (idx >= 0 && idx < simulationSteps.value.length) currentStepIndex.value = idx;
                 };
 
                 const startPlayback = () => {
                     playing.value = true;
                     if (playbackInterval) clearInterval(playbackInterval);
-                    playbackInterval = setInterval(() => {
-                        nextStep();
-                    }, playbackSpeed.value);
+                    playbackInterval = setInterval(() => nextStep(), playbackSpeed.value);
                 };
 
                 const stopPlayback = () => {
@@ -580,7 +865,6 @@
                     if (playing.value) {
                         stopPlayback();
                     } else {
-                        // Si ya está al final, reiniciar para reproducir de nuevo
                         if (currentStepIndex.value === simulationSteps.value.length - 1) {
                             currentStepIndex.value = 0;
                         }
@@ -588,19 +872,12 @@
                     }
                 };
 
-                // Cambiar velocidad de reproducción al cambiar opción
                 watch(playbackSpeed, () => {
-                    if (playing.value) {
-                        startPlayback();
-                    }
+                    if (playing.value) startPlayback();
                 });
 
-                // Seleccionar nodo para detalles
                 const selectNode = (node) => {
-                    selectedNode.value = {
-                        key: node.key,
-                        value: node.value
-                    };
+                    selectedNode.value = { key: node.key, value: node.value };
                 };
 
                 const searchSelected = () => {
@@ -611,7 +888,6 @@
                     }
                 };
 
-                // Métodos para verificar si el nodo es activo o raíz
                 const isNodeActive = (key) => {
                     return currentStep.value && currentStep.value.activeKey === key;
                 };
@@ -620,26 +896,15 @@
                     return currentRootKey.value === key;
                 };
 
-                // Algoritmo de diseño de árbol jerárquico visual
                 const calculatedNodes = computed(() => {
                     const nodes = [];
                     if (!treeState.value.tree) return nodes;
 
                     const traverse = (node, depth, minX, maxX) => {
                         if (!node) return;
-
                         const x = (minX + maxX) / 2;
                         const y = (depth * 90) + 70;
-
-                        nodes.push({
-                            key: node.key,
-                            value: node.value,
-                            x: x,
-                            y: y,
-                            depth: depth
-                        });
-
-                        // Espacio horizontal para descendientes
+                        nodes.push({ key: node.key, value: node.value, x, y, depth });
                         traverse(node.left, depth + 1, minX, x);
                         traverse(node.right, depth + 1, x, maxX);
                     };
@@ -654,7 +919,6 @@
 
                     const traverse = (node, depth, minX, maxX) => {
                         if (!node) return;
-
                         const x = (minX + maxX) / 2;
                         const y = (depth * 90) + 70;
 
@@ -664,7 +928,6 @@
                             edges.push({ x1: x, y1: y, x2: lx, y2: ly });
                             traverse(node.left, depth + 1, minX, x);
                         }
-
                         if (node.right) {
                             const rx = (x + maxX) / 2;
                             const ry = ((depth + 1) * 90) + 70;
@@ -677,16 +940,12 @@
                     return edges;
                 });
 
-                // Función de dibujo de enlaces curvados suaves
                 const drawEdge = (x1, y1, x2, y2) => {
-                    // Dibujar una curva Bézier cúbica suave entre nodos
                     const midY = (y1 + y2) / 2;
                     return `M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${y2}`;
                 };
 
-                // Control Paneo y Zoom (Interacciones de ratón)
                 const startPan = (e) => {
-                    // Solo panea si se hace click sobre el fondo del SVG, no sobre un grupo de nodo
                     if (e.target.tagName === 'svg' || e.target.tagName === 'path' || e.target.tagName === 'g') {
                         isPanning.value = true;
                         startX.value = e.clientX - panX.value;
@@ -700,83 +959,37 @@
                     panY.value = e.clientY - startY.value;
                 };
 
-                const endPan = () => {
-                    isPanning.value = false;
-                };
+                const endPan = () => { isPanning.value = false; };
 
                 const handleZoom = (e) => {
                     e.preventDefault();
-                    const zoomIntensity = 0.08;
                     const delta = e.deltaY < 0 ? 1 : -1;
-                    let nextScale = zoomScale.value + delta * zoomIntensity;
-                    // Limitar zoom
+                    let nextScale = zoomScale.value + delta * 0.08;
                     if (nextScale < 0.2) nextScale = 0.2;
                     if (nextScale > 3.0) nextScale = 3.0;
                     zoomScale.value = nextScale;
                 };
 
-                const zoomIn = () => {
-                    if (zoomScale.value < 3.0) zoomScale.value += 0.15;
-                };
-
-                const zoomOut = () => {
-                    if (zoomScale.value > 0.2) zoomScale.value -= 0.15;
-                };
-
-                const resetZoomPan = () => {
-                    zoomScale.value = 1.0;
-                    panX.value = 0;
-                    panY.value = 0;
-                };
+                const zoomIn = () => { if (zoomScale.value < 3.0) zoomScale.value += 0.15; };
+                const zoomOut = () => { if (zoomScale.value > 0.2) zoomScale.value -= 0.15; };
+                const resetZoomPan = () => { zoomScale.value = 1.0; panX.value = 0; panY.value = 0; };
 
                 onMounted(() => {
-                    fetchTree();
+                    checkBackend();
                 });
 
                 return {
-                    treeState,
-                    treeStats,
-                    currentRootKey,
-                    insertKey,
-                    insertValue,
-                    searchKey,
-                    deleteKey,
-                    loading,
-                    simulationSteps,
-                    currentStepIndex,
-                    currentStep,
-                    currentNodeDetail,
-                    playing,
-                    playbackSpeed,
-                    selectedNode,
-                    zoomScale,
-                    panX,
-                    panY,
-                    nodeRadius,
-                    viewBox,
-                    calculatedNodes,
-                    calculatedEdges,
-                    runInsert,
-                    runSearch,
-                    runDelete,
-                    runClear,
-                    runLoadSample,
-                    nextStep,
-                    prevStep,
-                    goToStep,
-                    togglePlay,
-                    selectNode,
-                    searchSelected,
-                    isNodeActive,
-                    isNodeRoot,
-                    drawEdge,
-                    startPan,
-                    pan,
-                    endPan,
-                    handleZoom,
-                    zoomIn,
-                    zoomOut,
-                    resetZoomPan
+                    treeState, treeStats, currentRootKey,
+                    insertKey, insertValue, searchKey, deleteKey, loading,
+                    simulationSteps, currentStepIndex, currentStep, currentNodeDetail,
+                    playing, playbackSpeed, selectedNode, backendAvailable,
+                    zoomScale, panX, panY, nodeRadius, viewBox,
+                    calculatedNodes, calculatedEdges,
+                    runInsert, runSearch, runDelete, runClear, runLoadSample,
+                    nextStep, prevStep, goToStep, togglePlay,
+                    selectNode, searchSelected, isNodeActive, isNodeRoot,
+                    drawEdge, startPan, pan, endPan, handleZoom,
+                    zoomIn, zoomOut, resetZoomPan
                 };
             }
         }).mount('#app');
