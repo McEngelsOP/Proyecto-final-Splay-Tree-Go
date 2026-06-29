@@ -400,10 +400,15 @@
                     return `0 0 800 600`;
                 });
 
+                // Detectar si el frontend corre en local o en un servidor remoto (ej: Vercel)
+                const apiBase = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                    ? '' 
+                    : 'http://localhost:8080';
+
                 // Cargar estado inicial del árbol
                 const fetchTree = async () => {
                     try {
-                        const res = await fetch('/api/tree');
+                        const res = await fetch(`${apiBase}/api/tree`);
                         const data = await res.json();
                         treeState.value = data;
                     } catch (err) {
@@ -417,7 +422,7 @@
                     loading.value = ref(true);
                     stopPlayback();
                     try {
-                        const res = await fetch('/api/insert', {
+                        const res = await fetch(`${apiBase}/api/insert`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ key: insertKey.value, value: insertValue.value })
@@ -445,7 +450,7 @@
                     loading.value = true;
                     stopPlayback();
                     try {
-                        const res = await fetch('/api/search', {
+                        const res = await fetch(`${apiBase}/api/search`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ key: searchKey.value })
@@ -475,7 +480,7 @@
                     loading.value = true;
                     stopPlayback();
                     try {
-                        const res = await fetch('/api/delete', {
+                        const res = await fetch(`${apiBase}/api/delete`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ key: deleteKey.value })
@@ -505,7 +510,7 @@
                     selectedNode.value = null;
                     currentNodeDetail.value = null;
                     try {
-                        const res = await fetch('/api/clear', { method: 'POST' });
+                        const res = await fetch(`${apiBase}/api/clear`, { method: 'POST' });
                         const data = await res.json();
                         treeState.value = data.final;
                     } catch (err) {
@@ -523,10 +528,10 @@
                     selectedNode.value = null;
                     currentNodeDetail.value = null;
                     try {
-                        const res = await fetch('/api/load-sample', { method: 'POST' });
+                        const res = await fetch(`${apiBase}/api/load-sample`, { method: 'POST' });
                         const data = await res.json();
                         treeState.value = data.final;
-                        alert(`¡Se cargaron ${data.loaded} productos del CSV en el Splay Tree!`);
+                        alert(`¡Se cargaron ${data.loaded} productos desde MySQL en el Splay Tree!`);
                     } catch (err) {
                         console.error(err);
                     } finally {
