@@ -109,7 +109,7 @@ func migrateCSVToSQL() error {
 	defer stmt.Close()
 
 	count := 0
-	const limit = 500 // Migrar 500 registros iniciales para tener una muestra robusta y rápida
+	const limit = 2000 // Migrar 2000 registros iniciales para tener una muestra robusta y rápida
 
 	for {
 		record, err := reader.Read()
