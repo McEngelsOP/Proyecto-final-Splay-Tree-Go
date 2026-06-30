@@ -622,9 +622,7 @@
                 const nodeRadius = ref(20);
                 const viewBox = computed(() => `0 0 800 600`);
 
-                const apiBase = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-                    ? ''
-                    : 'http://localhost:8080';
+                const apiBase = '';
 
                 const checkBackend = async () => {
                     try {
