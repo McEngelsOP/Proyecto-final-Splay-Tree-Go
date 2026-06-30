@@ -13,34 +13,41 @@ import (
 
 var DB *sql.DB
 
-// InitDB inicializa la conexión, crea las tablas y realiza la migración inicial si es necesario
+// InitDB inicializa la conexión, crea las tablas y realiza la migración inicial si es necesario.
+// Soporta dos modos: local (XAMPP) y nube (MYSQL_DSN env var).
 func InitDB() error {
-	// DSN sin base de datos específica para crearla si no existe
-	dsnRoot := "root:@tcp(127.0.0.1:3306)/?charset=utf8mb4&parseTime=True&loc=Local"
-	dbRoot, err := sql.Open("mysql", dsnRoot)
-	if err != nil {
-		return fmt.Errorf("error al conectar a MySQL: %v", err)
-	}
-	defer dbRoot.Close()
+	dsn := os.Getenv("MYSQL_DSN")
 
-	// Crear base de datos
-	_, err = dbRoot.Exec("CREATE DATABASE IF NOT EXISTS proyecto_retail")
-	if err != nil {
-		return fmt.Errorf("error al crear la base de datos proyecto_retail: %v", err)
+	if dsn == "" {
+		// Modo local: XAMPP en localhost
+		dsnRoot := "root:@tcp(127.0.0.1:3306)/?charset=utf8mb4&parseTime=True&loc=Local"
+		dbRoot, err := sql.Open("mysql", dsnRoot)
+		if err != nil {
+			return fmt.Errorf("error al conectar a MySQL: %v", err)
+		}
+		defer dbRoot.Close()
+
+		_, err = dbRoot.Exec("CREATE DATABASE IF NOT EXISTS proyecto_retail")
+		if err != nil {
+			return fmt.Errorf("error al crear la base de datos proyecto_retail: %v", err)
+		}
+
+		dsn = "root:@tcp(127.0.0.1:3306)/proyecto_retail?charset=utf8mb4&parseTime=True&loc=Local"
+		log.Println("Modo local: conectando a MySQL de XAMPP...")
+	} else {
+		log.Println("Modo nube: conectando a MySQL remoto...")
 	}
 
-	// Conectar a la base de datos específica
-	dsn := "root:@tcp(127.0.0.1:3306)/proyecto_retail?charset=utf8mb4&parseTime=True&loc=Local"
+	var err error
 	DB, err = sql.Open("mysql", dsn)
 	if err != nil {
-		return fmt.Errorf("error al abrir base de datos proyecto_retail: %v", err)
+		return fmt.Errorf("error al abrir base de datos: %v", err)
 	}
 
 	if err := DB.Ping(); err != nil {
-		return fmt.Errorf("error al hacer ping a la base de datos proyecto_retail: %v", err)
+		return fmt.Errorf("error al hacer ping a la base de datos: %v", err)
 	}
 
-	// Crear tabla productos
 	query := `
 	CREATE TABLE IF NOT EXISTS productos (
 		stock_code VARCHAR(50) PRIMARY KEY,
@@ -54,9 +61,8 @@ func InitDB() error {
 		return fmt.Errorf("error al crear la tabla productos: %v", err)
 	}
 
-	log.Println("✓ Conexión establecida con MySQL de XAMPP. Tabla 'productos' lista.")
+	log.Println("✓ Conexión establecida. Tabla 'productos' lista.")
 
-	// Verificar si la tabla está vacía para hacer la migración inicial del CSV
 	var count int
 	err = DB.QueryRow("SELECT COUNT(*) FROM productos").Scan(&count)
 	if err != nil {
@@ -66,10 +72,10 @@ func InitDB() error {
 	if count == 0 {
 		log.Println("La tabla 'productos' está vacía. Iniciando migración de registros desde el CSV...")
 		if err := migrateCSVToSQL(); err != nil {
-			log.Printf("Advertencia en migración: %v\n", err)
+			log.Printf("Advertencia en migración: %v (esto es normal en modo nube sin CSV)\n", err)
 		}
 	} else {
-		log.Printf("✓ Base de datos ya inicializada con %d registros.\n", count)
+		log.Printf("✓ Base de datos inicializada con %d registros.\n", count)
 	}
 
 	return nil

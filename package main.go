@@ -25,7 +25,7 @@ func main() {
 	port := flag.Int("port", 8080, "Puerto para el servidor de simulación")
 	flag.Parse()
 
-	if *serverMode {
+	if *serverMode || os.Getenv("PORT") != "" {
 		IniciarServidor(*port)
 		return
 	}

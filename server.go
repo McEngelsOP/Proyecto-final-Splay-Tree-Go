@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"proyecto/splaytree"
+	"strconv"
 	"sync"
 )
 
@@ -323,14 +325,19 @@ func handleLoadSample(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// IniciarServidor arranca el servidor web en el puerto especificado
+// IniciarServidor arranca el servidor web en el puerto especificado.
+// En la nube (Render), el puerto se toma de la variable de entorno PORT.
 func IniciarServidor(puerto int) {
-	// Inicializar la conexión a MySQL en XAMPP
-	if err := InitDB(); err != nil {
-		log.Fatalf("Error crítico: No se pudo inicializar la base de datos MySQL en XAMPP. Asegúrate de tener XAMPP/MySQL encendido. Detalles: %v", err)
+	if envPort := os.Getenv("PORT"); envPort != "" {
+		if p, err := strconv.Atoi(envPort); err == nil {
+			puerto = p
+		}
 	}
 
-	// Rutas API envueltas con enableCORS para compatibilidad de despliegue en Vercel
+	if err := InitDB(); err != nil {
+		log.Fatalf("Error crítico: No se pudo inicializar la base de datos. Detalles: %v", err)
+	}
+
 	http.HandleFunc("/api/tree", enableCORS(handleGetTree))
 	http.HandleFunc("/api/insert", enableCORS(handleInsert))
 	http.HandleFunc("/api/search", enableCORS(handleSearch))
@@ -338,7 +345,6 @@ func IniciarServidor(puerto int) {
 	http.HandleFunc("/api/clear", enableCORS(handleClear))
 	http.HandleFunc("/api/load-sample", enableCORS(handleLoadSample))
 
-	// Servir archivos estáticos del frontend
 	fs := http.FileServer(http.Dir("./web"))
 	http.Handle("/", fs)
 
