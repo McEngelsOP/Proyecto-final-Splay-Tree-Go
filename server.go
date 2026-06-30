@@ -271,12 +271,12 @@ func handleClear(w http.ResponseWriter, r *http.Request) {
 	// Reiniciar en memoria
 	tree = splaytree.New[string, string]()
 
-	// Vaciar tabla MySQL
-	if err := DBClearProductos(); err != nil {
-		log.Printf("Advertencia: No se pudo vaciar la tabla productos en MySQL: %v\n", err)
-	} else {
-		log.Println("✓ Tabla 'productos' vaciada en MySQL.")
-	}
+	// Vaciar tabla MySQL - Desactivado por seguridad para evitar borrar la DB en la nube
+	// if err := DBClearProductos(); err != nil {
+	// 	log.Printf("Advertencia: No se pudo vaciar la tabla productos en MySQL: %v\n", err)
+	// } else {
+	// 	log.Println("✓ Tabla 'productos' vaciada en MySQL.")
+	// }
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
